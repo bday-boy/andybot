@@ -1,2 +1,2 @@
 yt-dlp
-"discord.py[voice]"
+discord.py[voice]
