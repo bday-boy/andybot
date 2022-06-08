@@ -1,5 +1,5 @@
-# Discord API Token
-token
+# Files with confidential data (i.e. Discord API Token)
+config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
