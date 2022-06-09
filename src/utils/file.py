@@ -28,9 +28,3 @@ def load_config(config_path: str = 'config.json') -> dict:
     """
     config_str = get_file_content(config_path, default='{}')
     return json.loads(config_str)
-
-
-if __name__ == '__main__':
-    cfg = load_config()
-    print(cfg)
-    a = 0
