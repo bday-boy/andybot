@@ -1,7 +1,7 @@
 import discord
 import yt_dlp
 
-from src.errors import NoSongInfoError
+from andybot.errors import NoSongInfoError
 
 YT_DLP_OPTS = {
     'default_search': 'ytsearch',

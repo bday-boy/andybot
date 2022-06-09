@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from src.utils.file import load_config
+from andybot.utils.file import load_config
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
