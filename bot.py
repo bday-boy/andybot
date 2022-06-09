@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from src.config import load_config
+from src.utils.file import load_config
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -26,6 +26,7 @@ bot = commands.Bot(command_prefix=cfg['command_prefix'], intents=intents)
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
+    await bot.change_presence(activity=discord.Game('Glitches in my System'))
 
 
 @bot.command()
@@ -36,7 +37,7 @@ async def test(ctx: Context, *args) -> None:
 
 # Loads all cogs. Each cog must have a module-level setup function defined.
 for file_name in os.listdir('./src/cogs'):
-    if file_name.endswith('.py'):
+    if file_name.endswith('.py') and not file_name.startswith('__'):
         bot.load_extension(f'src.cogs.{file_name[:-3]}')
 
 
