@@ -10,13 +10,17 @@ from andybot.utils.music_players import Song, YouTubeSong
 
 
 class Playlist(deque):
-    """Helper deque subclass to track a playlist."""
+    """Helper deque subclass to track a playlist.
+    
+    Exactly identical to a normal deque, but it has an added property
+    next_song which returns the next song if one exists and None otherwise.
+    """
 
     def __init_subclass__(cls) -> None:
         return super().__init_subclass__()
 
     @property
-    def next_song(self) -> Union[YouTubeSong, None]:
+    def next_song(self) -> Union[Song, None]:
         if self.__len__() > 0:
             return self[0]
         else:
@@ -65,7 +69,7 @@ class Music(commands.Cog):
         """Attempts to play the given URL. Currently does not support any
         other arguments.
         """
-        client = ctx.guild.voice_client
+        voice = ctx.guild.voice_client
         state = self.get_state(ctx.guild)
 
         try:
@@ -74,18 +78,23 @@ class Music(commands.Cog):
             await ctx.send(f"Couldn't download the video :pensive: {e}")
             return
 
-        if client and client.channel:
+        if voice and voice.channel:
             state.playlist.append(song)
             await ctx.send('Added to queue.')
         else:
             channel = ctx.author.voice.channel
-            client = await channel.connect()
-            self._play(client, state, song)
+            voice = await channel.connect()
+            self._play(voice, state, song)
             await ctx.send(embed=song.embed(state.playlist.next_song))
 
     @commands.command(aliases=['pause', 'resume'])
     async def toggle(self, ctx: commands.Context):
         """Pauses or resumes the current song."""
+        voice = ctx.guild.voice_client
+        if voice.is_playing():
+            voice.pause()
+        else:
+            voice.resume()
 
     @commands.command(name='next', aliases=['skip', '>'])
     async def next_(self, ctx: commands.Context):
@@ -94,10 +103,10 @@ class Music(commands.Cog):
     @commands.command(aliases=['leave', 'die', 'begone', 'farethewell'])
     async def stop(self, ctx: commands.Context) -> None:
         """Attempts to play the given URL."""
-        client = ctx.guild.voice_client
+        voice = ctx.guild.voice_client
         state = self.get_state(ctx.guild)
-        if client and client.channel:
-            await client.disconnect()
+        if voice and voice.channel:
+            await voice.disconnect()
             state.reset()
         else:
             raise commands.CommandError('Bot is not in a voice channel.')
@@ -116,7 +125,7 @@ class Music(commands.Cog):
         state.volume = vol
         ctx.guild.voice_client.volume = vol
 
-    def _play(self, client: discord.Client, state: GuildState,
+    def _play(self, voice: discord.Client, state: GuildState,
               song: YouTubeSong) -> None:
         """Handles the actual playing of the song.
 
@@ -130,13 +139,13 @@ class Music(commands.Cog):
         def after(error):
             if state.playlist.next_song is not None:
                 next_song = state.playlist.popleft()
-                self._play(client, state, next_song)
+                self._play(voice, state, next_song)
             else:
                 asyncio.run_coroutine_threadsafe(
-                    client.disconnect(), self.bot.loop
+                    voice.disconnect(), self.bot.loop
                 )
 
-        client.play(source, after=after)
+        voice.play(source, after=after)
 
 
 def setup(client: discord.Client) -> None:
