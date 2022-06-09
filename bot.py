@@ -1,5 +1,7 @@
-import discord
 import logging
+import os
+
+import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
@@ -32,19 +34,10 @@ async def test(ctx: Context, *args) -> None:
     await ctx.send(f'This is a test. It has {len(args)} arguments: {cmd_args}')
 
 
-@bot.command()
-async def play(ctx: Context, url: str, *args) -> None:
-    """Attempts to play the given URL in a voice call."""
-
-
-@bot.command()
-async def pause(ctx: Context) -> None:
-    """Pauses the current song, if any."""
-
-
-@bot.command(name='next')
-async def _next(ctx: Context) -> None:
-    """Goes to the next song in the queue."""
+# Loads all cogs. Each cog must have a module-level setup function defined.
+for file_name in os.listdir('./src/cogs'):
+    if file_name.endswith('.py'):
+        bot.load_extension(f'src.cogs.{file_name[:-3]}')
 
 
 bot.run(cfg['token'])
