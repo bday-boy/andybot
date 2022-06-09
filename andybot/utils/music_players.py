@@ -64,7 +64,9 @@ class YouTubeSong(Song):
         description = self.description[:256].split('\n')
         if len(description) > 5 or len(self.description) > 256:
             description = "\n".join(description[:5]) + '...'
-        
+        else:
+            description = "\n".join(description[:5])
+
         return discord.Embed(
             color=discord.Color.from_rgb(r=0x77, g=0xDD, b=0x77),
             description=description,
