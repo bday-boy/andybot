@@ -1,6 +1,6 @@
 import asyncio
 from collections import defaultdict, deque
-from typing import Union
+from typing import Tuple, Union
 
 import discord
 import yt_dlp
@@ -11,7 +11,7 @@ from andybot.utils.music_players import Song, YouTubeSong
 
 class Playlist(deque):
     """Helper deque subclass to track a playlist.
-    
+
     Exactly identical to a normal deque, but it has an added property
     next_song which returns the next song if one exists and None otherwise.
     """
@@ -37,6 +37,7 @@ class GuildState:
         self.playlist = Playlist()
         self.song_history = []
         self.volume = 0.75
+        self.voice = None
         self._now_playing = None
 
     @property
@@ -56,9 +57,16 @@ class Music(commands.Cog):
         self.bot = bot
         self.states = defaultdict(GuildState)
 
-    def get_state(self, guild: discord.Guild) -> GuildState:
+    def get_state(self, ctx: commands.Context) -> GuildState:
         """Gets the state for a given guild."""
-        return self.states[guild.id]
+        return self.states[ctx.guild.id]
+
+    def get_voice_client(self, ctx: commands.Context) -> discord.VoiceClient:
+        return ctx.guild.voice_client
+
+    def get_voice_info(self, ctx: commands.Context
+                       ) -> Tuple[discord.VoiceClient, GuildState]:
+        return self.get_voice_client(ctx), self.get_state(ctx)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -69,8 +77,7 @@ class Music(commands.Cog):
         """Attempts to play the given URL. Currently does not support any
         other arguments.
         """
-        voice = ctx.guild.voice_client
-        state = self.get_state(ctx.guild)
+        voice, state = self.get_voice_info(ctx)
 
         try:
             song = YouTubeSong(url, ctx.author)
@@ -84,13 +91,14 @@ class Music(commands.Cog):
         else:
             channel = ctx.author.voice.channel
             voice = await channel.connect()
+            await ctx.guild.change_voice_state(channel=channel, self_deaf=True)
             self._play(voice, state, song)
             await ctx.send(embed=song.embed(state.playlist.next_song))
 
     @commands.command(aliases=['pause', 'resume'])
     async def toggle(self, ctx: commands.Context):
         """Pauses or resumes the current song."""
-        voice = ctx.guild.voice_client
+        voice = self.get_voice_client(ctx)
         if voice.is_playing():
             voice.pause()
         else:
@@ -103,8 +111,7 @@ class Music(commands.Cog):
     @commands.command(aliases=['leave', 'die', 'begone', 'farethewell'])
     async def stop(self, ctx: commands.Context) -> None:
         """Attempts to play the given URL."""
-        voice = ctx.guild.voice_client
-        state = self.get_state(ctx.guild)
+        voice, state = self.get_voice_info(ctx)
         if voice and voice.channel:
             await voice.disconnect()
             state.reset()
@@ -114,7 +121,7 @@ class Music(commands.Cog):
     @commands.command(aliases=['v', 'vol'])
     async def volume(self, ctx: commands.Context, *, vol: Union[int, float]):
         """Sets the volume. Accepts any value between 0 and 200."""
-        state = self.get_state(ctx.guild)
+        state = self.get_state(ctx)
 
         if not 0 <= vol <= 200:
             ctx.send('Volume must be between 0 and 200.')
