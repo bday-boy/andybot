@@ -29,16 +29,10 @@ async def on_ready():
     await bot.change_presence(activity=discord.Game('Glitches in my System'))
 
 
-@bot.command()
-async def test(ctx: Context, *args) -> None:
-    cmd_args = ', '.join(args)
-    await ctx.send(f'This is a test. It has {len(args)} arguments: {cmd_args}')
-
-
 # Loads all cogs. Each cog must have a module-level setup function defined.
-for file_name in os.listdir('./src/cogs'):
+for file_name in os.listdir('./andybot/cogs'):
     if file_name.endswith('.py') and not file_name.startswith('__'):
-        bot.load_extension(f'src.cogs.{file_name[:-3]}')
+        bot.load_extension(f'andybot.cogs.{file_name[:-3]}')
 
 
 bot.run(cfg['token'])
