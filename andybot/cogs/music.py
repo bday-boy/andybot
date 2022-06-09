@@ -123,7 +123,7 @@ class Music(commands.Cog):
 
         vol /= 100
         state.volume = vol
-        ctx.guild.voice_client.volume = vol
+        ctx.guild.voice_client.source.volume = vol
 
     def _play(self, voice: discord.Client, state: GuildState,
               song: YouTubeSong) -> None:
