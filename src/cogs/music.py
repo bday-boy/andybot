@@ -7,78 +7,7 @@ import yt_dlp
 from discord.ext import commands
 from discord.ext.commands import Context, Cog
 
-from src.errors import NoSongInfoError
-
-YT_DLP_OPTS = {
-    'default_search': 'ytsearch',
-    'format': 'bestaudio/best',
-    'extract_flat': 'in_playlist',
-    'noplaylist': True,
-}
-
-KEYS_TO_SAVE = (
-    'title',
-    'thumbnail',
-    'duration',
-    'url',
-    'webpage_url',
-    'description',
-)
-
-QUALITIES = {
-    'low': 1,
-    'medium': 2,
-    'high': 3
-}
-
-
-# Class forward declaration so we can use it for type hinting.
-class YouTubeSong:
-    ...
-
-
-class YouTubeSong:
-    """yt-dlp helper class that downloads video information and stores it
-    in class attributes for easy use.
-    """
-
-    def __init__(self, url: str, author: discord.User = None) -> None:
-        info = None
-        with yt_dlp.YoutubeDL(YT_DLP_OPTS) as ydl:
-            info = ydl.extract_info(url, download=False)
-        if info is None:
-            raise NoSongInfoError('The requested URL has no information.')
-        for key in KEYS_TO_SAVE:
-            setattr(self, key, info[key])
-        self.stream_url = self.get_highest_quality_stream(info['formats'])
-        self.author = author
-        self._all_info = info
-
-    def get_highest_quality_stream(self, formats: list[dict]) -> str:
-        """Finds the highest quality stream URL and returns it."""
-        audio_only = list(filter(
-            lambda d: 'audio only' in d['format'], formats
-        ))
-        best_quality = max(
-            audio_only, key=lambda d: QUALITIES.get(d['format_note'], 0)
-        )
-        return best_quality['url']
-
-    def embed(self, next_song: YouTubeSong) -> discord.Embed:
-        """Creates an embed with information about the song and the next
-        song in the queue.
-        """
-        embed = discord.Embed(
-            author=self.author,
-            color=discord.Color.from_rgb(r=0x77, g=0xDD, b=0x77),
-            description=self.description,
-            footer=f'Next song: {next_song.title if next_song else "none"}',
-            thumbnail=self.thumbnail,
-            title=self.title,
-            url=self.url,
-            video=self.url,
-        )
-        return embed
+from src.utils.music_players import Song, YouTubeSong
 
 
 class Playlist(deque):
