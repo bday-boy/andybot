@@ -49,9 +49,9 @@ class YouTubeSong(Song):
 
     def get_highest_quality_stream(self, formats: list[dict]) -> str:
         """Finds the highest quality stream URL and returns it."""
-        audio_only = list(filter(
+        audio_only = filter(
             lambda d: 'audio only' in d['format'], formats
-        ))
+        )
         best_quality = max(
             audio_only, key=lambda d: QUALITIES.get(d['format_note'], 0)
         )
@@ -61,14 +61,19 @@ class YouTubeSong(Song):
         """Creates an embed with information about the song and the next
         song in the queue.
         """
-        embed = discord.Embed(
-            author=self.author,
+        description = self.description[:256].split('\n')
+        if len(description) > 5 or len(self.description) > 256:
+            description = "\n".join(description[:5]) + '...'
+        
+        return discord.Embed(
             color=discord.Color.from_rgb(r=0x77, g=0xDD, b=0x77),
-            description=self.description,
-            footer=f'Next song: {next_song.title if next_song else "none"}',
-            thumbnail=self.thumbnail,
+            description=description,
             title=self.title,
             url=self.url,
-            video=self.url,
+        ).set_author(
+            name=self.author
+        ).set_thumbnail(
+            url=self.thumbnail
+        ).set_footer(
+            text=f'Next song: {next_song.title if next_song else "none"}'
         )
-        return embed
