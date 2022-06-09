@@ -30,7 +30,7 @@ class Song:
     """Base class for all songs."""
 
 
-class YouTubeSong:
+class YouTubeSong(Song):
     """yt-dlp helper class that downloads video information and stores it
     in class attributes for easy use.
     """
