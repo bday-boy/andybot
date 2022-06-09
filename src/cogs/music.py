@@ -1,4 +1,6 @@
-from typing import Generator
+import asyncio
+from collections import defaultdict, deque
+from typing import Union
 
 import discord
 import yt_dlp
@@ -20,11 +22,27 @@ KEYS_TO_SAVE = (
     'duration',
     'url',
     'webpage_url',
+    'description',
 )
 
+QUALITIES = {
+    'low': 1,
+    'medium': 2,
+    'high': 3
+}
 
-class YouTubeVideo:
-    def __init__(self, url: str) -> None:
+
+# Class forward declaration so we can use it for type hinting.
+class YouTubeSong:
+    ...
+
+
+class YouTubeSong:
+    """yt-dlp helper class that downloads video information and stores it
+    in class attributes for easy use.
+    """
+
+    def __init__(self, url: str, author: discord.User = None) -> None:
         info = None
         with yt_dlp.YoutubeDL(YT_DLP_OPTS) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -32,44 +50,141 @@ class YouTubeVideo:
             raise NoSongInfoError('The requested URL has no information.')
         for key in KEYS_TO_SAVE:
             setattr(self, key, info[key])
-        self._stream_urls = self.get_audio_stream_urls(info['formats'])
+        self.stream_url = self.get_highest_quality_stream(info['formats'])
+        self.author = author
         self._all_info = info
 
-        # Just gets the first audio-based URL
-        self.stream_url = next(self._stream_urls)
+    def get_highest_quality_stream(self, formats: list[dict]) -> str:
+        """Finds the highest quality stream URL and returns it."""
+        audio_only = list(filter(
+            lambda d: 'audio only' in d['format'], formats
+        ))
+        best_quality = max(
+            audio_only, key=lambda d: QUALITIES.get(d['format_note'], 0)
+        )
+        return best_quality['url']
 
-    def get_audio_stream_urls(self, formats: list[dict]
-                              ) -> Generator[dict, None, None]:
-        """Yields all URLs for formats that are audio-based."""
-        for format_ in formats:
-            if format_['acodec'] != 'opus':
-                continue
-            yield format_['url']
+    def embed(self, next_song: YouTubeSong) -> discord.Embed:
+        """Creates an embed with information about the song and the next
+        song in the queue.
+        """
+        embed = discord.Embed(
+            author=self.author,
+            color=discord.Color.from_rgb(r=0x77, g=0xDD, b=0x77),
+            description=self.description,
+            footer=f'Next song: {next_song.title if next_song else "none"}',
+            thumbnail=self.thumbnail,
+            title=self.title,
+            url=self.url,
+            video=self.url,
+        )
+        return embed
+
+
+class Playlist(deque):
+    """Helper deque subclass to track a playlist."""
+    
+    def __init_subclass__(cls) -> None:
+        return super().__init_subclass__()
+
+    @property
+    def next_song(self) -> Union[YouTubeSong, None]:
+        if self.__len__() > 0:
+            return self[0]
+        else:
+            return None
+
+
+class GuildState:
+    """Helper class to track a single guild's state."""
+
+    def __init__(self) -> None:
+        self.playlist = Playlist()
+        self.now_playing = None
+        self.volume = 0.75
+
+    def reset(self) -> None:
+        self.playlist = Playlist()
+        self.now_playing = None
+        self.volume = 0.75
 
 
 class Music(Cog):
     """Cog for playing music in voice call."""
 
-    def __init__(self, client: discord.Client) -> None:
-        self.client = client
-        self.queue = []
+    def __init__(self, bot: discord.Client) -> None:
+        self.bot = bot
+        self.states = defaultdict(GuildState)
+
+    def get_state(self, guild: discord.Guild) -> GuildState:
+        """Gets the state for a given guild."""
+        return self.states[guild.id]
 
     @commands.Cog.listener()
-    async def play(self):
+    async def on_ready(self):
         print('andybot music player is ready.')
 
     @commands.command()
-    async def test(self, ctx: Context):
-        await ctx.send('This is a cog test.')
+    async def play(self, ctx: Context, *, url: str) -> None:
+        """Attempts to play the given URL."""
+        client = ctx.guild.voice_client
+        state = self.get_state(ctx.guild)
 
-    @commands.command()
-    async def play(self, ctx: Context): ...
+        try:
+            song = YouTubeSong(url, ctx.author)
+        except yt_dlp.DownloadError as e:
+            await ctx.send(f"Couldn't download the video :pensive: {e}")
+            return
+
+        if client and client.channel:
+            state.playlist.append(song)
+            await ctx.send('Added to queue.')
+        else:
+            channel = ctx.author.voice.channel
+            client = await channel.connect()
+            self._play(client, state, song)
+            await ctx.send(embed=song.embed(state.playlist.next_song))
 
     @commands.command(aliases=['pause', 'resume'])
-    async def toggle(self, ctx: Context): ...
+    async def toggle(self, ctx: Context):
+        """Pauses or resumes the current song."""
 
     @commands.command(name='next', aliases=['skip'])
-    async def next_(self, ctx: Context): ...
+    async def next_(self, ctx: Context):
+        """Skips to the next song."""
+
+    @commands.command(aliases=['leave', 'die', 'begone', 'farethewell'])
+    async def stop(self, ctx: Context) -> None:
+        """Attempts to play the given URL."""
+        client = ctx.guild.voice_client
+        state = self.get_state(ctx.guild)
+        if client and client.channel:
+            await client.disconnect()
+            state.reset()
+        else:
+            raise commands.CommandError('Bot is not in a voice channel.')
+
+    @commands.command(name='next', aliases=['vol'])
+    async def volume(self, ctx: Context):
+        """Skips to the next song."""
+
+    def _play(self, client: discord.Client, state: GuildState,
+              song: YouTubeSong) -> None:
+        source = discord.PCMVolumeTransformer(
+            discord.FFmpegPCMAudio(song.stream_url), volume=state.volume
+        )
+        state.now_playing = song
+
+        def after(error):
+            if len(state.playlist) > 0:
+                next_song = state.playlist.popleft()
+                self._play(client, state, next_song)
+            else:
+                asyncio.run_coroutine_threadsafe(
+                    client.disconnect(), self.bot.loop
+                )
+
+        client.play(source, after=after)
 
 
 def setup(client: discord.Client) -> None:
