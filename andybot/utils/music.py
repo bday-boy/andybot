@@ -3,6 +3,7 @@ import yt_dlp
 from collections import deque
 from typing import Any, List, Union
 
+from andybot.base import Andybot
 from andybot.errors import NoSongInfoError
 from andybot.utils.fuzzy_string import lcs
 
@@ -25,7 +26,7 @@ KEYS_TO_SAVE = (
 QUALITIES = {
     'low': 1,
     'medium': 2,
-    'high': 3
+    'high': 3,
 }
 
 
@@ -70,8 +71,7 @@ class YouTubeSong(Song):
         else:
             description = "\n".join(description[:5])
 
-        return discord.Embed(
-            color=discord.Color.from_rgb(r=0x77, g=0xDD, b=0x77),
+        embed = discord.Embed(
             description=description,
             title=self.title,
             url=self.url,
@@ -82,6 +82,7 @@ class YouTubeSong(Song):
         ).set_footer(
             text=f'Next song: {next_song.title if next_song else "none"}'
         )
+        return Andybot.format_embed(embed)
 
 
 class Playlist(deque):
@@ -114,6 +115,9 @@ class Playlist(deque):
         """Skips ahead by a number of songs."""
         if num_songs < 0:
             raise ValueError('Number of songs to skip must be positive.')
+
+        if self.__len__() < num_songs - 1:
+            raise ValueError('Number of songs cannot exceed length of queue.')
 
         # Create a list of skipped songs so we can add them to our song
         # history
