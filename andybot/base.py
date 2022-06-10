@@ -15,5 +15,5 @@ class Andybot:
         """Changes properties of an embed in-place and returns it to preserve
         the fluid Embed chaining that the original class offers.
         """
-        embed.color = Andybot.color
+        embed.color = discord.Color.from_rgb(*Andybot.color)
         return embed
