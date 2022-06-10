@@ -6,6 +6,8 @@ import discord
 import yt_dlp
 from discord.ext import commands
 
+from andybot.utils.checks import in_voice_call, in_voice_call_check, \
+    is_playing_audio, is_playing_audio_check
 from andybot.utils.music import Playlist, Song, YouTubeSong
 
 
@@ -18,7 +20,7 @@ class GuildState:
     def reset(self) -> None:
         self.playlist = Playlist()
         self.song_history = []
-        self.volume = 0.75
+        self.volume = 0.1
         self.voice = None
         self._now_playing = None
 
@@ -54,30 +56,32 @@ class Music(commands.Cog):
     async def on_ready(self):
         print('andybot music player is ready.')
 
-    @commands.command()
+    @commands.command(aliases=['add', 'queue'])
     async def play(self, ctx: commands.Context, *, url: str) -> None:
         """Attempts to play the given URL. Currently does not support any
         other arguments.
         """
-        voice, state = self.get_voice_info(ctx)
+        state = self.get_state(ctx)
 
         try:
             song = YouTubeSong(url, ctx.author)
-        except yt_dlp.DownloadError as e:
-            await ctx.send(f"Couldn't download the video :pensive: {e}")
-            return
+        except yt_dlp.DownloadError as yt_error:
+            await ctx.send(f"Couldn't download the video :pensive: {yt_error}")
+            raise yt_error
 
-        if not (voice and voice.channel):
+        if not in_voice_call(ctx):
             channel = ctx.author.voice.channel
-            voice = await channel.connect()
+            await channel.connect()
             await ctx.guild.change_voice_state(channel=channel, self_deaf=True)
 
-        if state.playlist.is_empty():
-            self._play(voice, state, song)
-        else:
-            state.playlist.add_song(song)
-            await ctx.send('Added to queue.')
+        state.playlist.add_song(song)
+        await ctx.send('Added to queue.')
 
+        if not is_playing_audio(ctx):
+            self._play(ctx)
+
+    @commands.check(in_voice_call_check)
+    @commands.check(is_playing_audio_check)
     @commands.command(aliases=['pause', 'resume'])
     async def toggle(self, ctx: commands.Context):
         """Pauses or resumes the current song."""
@@ -87,22 +91,30 @@ class Music(commands.Cog):
         else:
             voice.resume()
 
-    @commands.command(name='next', aliases=['skip', '>'])
-    async def next_(self, ctx: commands.Context):
-        """Skips to the next song."""
+    @commands.check(in_voice_call_check)
+    @commands.check(is_playing_audio_check)
+    @commands.command(aliases=['next', '|'])
+    async def skip(self, ctx: commands.Context, *, num_songs: int = 1) -> None:
+        """Skips ahead by a certain number of songs."""
+        voice, state = self.get_voice_info(ctx)
+        if voice and voice.channel:
+            await voice.stop()
+            skipped_songs = state.playlist.skip(num_songs)
+            state.playlist.extend(skipped_songs)
+        else:
+            raise commands.CommandError('Bot is not in a voice channel.')
 
+    @commands.check(in_voice_call_check)
     @commands.command(aliases=['leave', 'die', 'begone', 'farethewell'])
     async def stop(self, ctx: commands.Context) -> None:
         """Attempts to play the given URL."""
         voice, state = self.get_voice_info(ctx)
-        if voice and voice.channel:
-            await voice.disconnect()
-            state.reset()
-        else:
-            raise commands.CommandError('Bot is not in a voice channel.')
+        await voice.disconnect()
+        state.reset()
 
     @commands.command(aliases=['v', 'vol'])
-    async def volume(self, ctx: commands.Context, *, vol: Union[int, float]):
+    async def volume(self, ctx: commands.Context, *, vol: Union[int, float]
+                     ) -> None:
         """Sets the volume. Accepts any value between 0 and 200."""
         state = self.get_state(ctx)
 
@@ -115,30 +127,26 @@ class Music(commands.Cog):
         state.volume = vol
         ctx.guild.voice_client.source.volume = vol
 
-    def _play(self, ctx: commands.Context, state: GuildState,
-              song: YouTubeSong) -> None:
+    def _play(self, ctx: commands.Context) -> None:
         """Handles the actual playing of the song.
 
-        TODO: Currently experiences some pretty choppy audio at times.
+        TODO: Currently experiences some pretty choppy audio at times. Seems
+        to be pretty intermittent, so might just be my wifi/Discord at home
+        being bad (since I'm running this bot from home).
         """
-        voice = self.get_voice_client(ctx)
+        voice, state = self.get_voice_info(ctx)
+        song = state.playlist.get_song()
         source = discord.PCMVolumeTransformer(
             discord.FFmpegPCMAudio(song.stream_url), volume=state.volume
         )
         state.now_playing = song
+        asyncio.run_coroutine_threadsafe(
+            ctx.send(embed=song.embed(state.playlist.next_song)), self.bot.loop
+        )
 
-        def after(error):
+        def after(error: Exception) -> None:
             if not state.playlist.is_empty():
-                next_song = state.playlist.get_song()
-                self._play(voice, state, next_song)
-                song_embed = song.embed(state.playlist.next_song)
-                asyncio.run_coroutine_threadsafe(
-                    ctx.send(embed=song_embed), self.bot.loop
-                )
-            else:
-                asyncio.run_coroutine_threadsafe(
-                    voice.disconnect(), self.bot.loop
-                )
+                self._play(ctx)
 
         voice.play(source, after=after)
 

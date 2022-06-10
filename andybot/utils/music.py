@@ -4,7 +4,7 @@ from collections import deque
 from typing import Any, List, Union
 
 from andybot.errors import NoSongInfoError
-from fuzzy_string import lcs
+from andybot.utils.fuzzy_string import lcs
 
 YT_DLP_OPTS = {
     'default_search': 'ytsearch',
@@ -112,11 +112,11 @@ class Playlist(deque):
 
     def skip(self, num_songs: int) -> List[Union[Any, None]]:
         """Skips ahead by a number of songs."""
-        if num_songs <= 0:
+        if num_songs < 0:
             raise ValueError('Number of songs to skip must be positive.')
 
         # Create a list of skipped songs so we can add them to our song
-        # history and get the one to play with skipped_songs[-1]
+        # history
         skipped_songs = []
         for _ in range(num_songs):
             skipped_songs.append(self.get_song())
@@ -128,9 +128,8 @@ class Playlist(deque):
             raise ValueError('Cannot search an empty queue.')
 
         found_index = self.search_playlist(song_name)
-
         if found_index is not None:
-            return self.skip(found_index + 1)
+            return self.skip(found_index)
         else:
             raise Exception("Couldn't find the song in the queue.")
 
