@@ -6,25 +6,7 @@ import discord
 import yt_dlp
 from discord.ext import commands
 
-from andybot.utils.music_players import Song, YouTubeSong
-
-
-class Playlist(deque):
-    """Helper deque subclass to track a playlist.
-
-    Exactly identical to a normal deque, but it has an added property
-    next_song which returns the next song if one exists and None otherwise.
-    """
-
-    def __init_subclass__(cls) -> None:
-        return super().__init_subclass__()
-
-    @property
-    def next_song(self) -> Union[Song, None]:
-        if self.__len__() > 0:
-            return self[0]
-        else:
-            return None
+from andybot.utils.music import Playlist, Song, YouTubeSong
 
 
 class GuildState:
@@ -85,15 +67,16 @@ class Music(commands.Cog):
             await ctx.send(f"Couldn't download the video :pensive: {e}")
             return
 
-        if voice and voice.channel:
-            state.playlist.append(song)
-            await ctx.send('Added to queue.')
-        else:
+        if not (voice and voice.channel):
             channel = ctx.author.voice.channel
             voice = await channel.connect()
             await ctx.guild.change_voice_state(channel=channel, self_deaf=True)
+
+        if state.playlist.is_empty():
             self._play(voice, state, song)
-            await ctx.send(embed=song.embed(state.playlist.next_song))
+        else:
+            state.playlist.add_song(song)
+            await ctx.send('Added to queue.')
 
     @commands.command(aliases=['pause', 'resume'])
     async def toggle(self, ctx: commands.Context):
@@ -132,21 +115,26 @@ class Music(commands.Cog):
         state.volume = vol
         ctx.guild.voice_client.source.volume = vol
 
-    def _play(self, voice: discord.Client, state: GuildState,
+    def _play(self, ctx: commands.Context, state: GuildState,
               song: YouTubeSong) -> None:
         """Handles the actual playing of the song.
 
         TODO: Currently experiences some pretty choppy audio at times.
         """
+        voice = self.get_voice_client(ctx)
         source = discord.PCMVolumeTransformer(
             discord.FFmpegPCMAudio(song.stream_url), volume=state.volume
         )
         state.now_playing = song
 
         def after(error):
-            if state.playlist.next_song is not None:
-                next_song = state.playlist.popleft()
+            if not state.playlist.is_empty():
+                next_song = state.playlist.get_song()
                 self._play(voice, state, next_song)
+                song_embed = song.embed(state.playlist.next_song)
+                asyncio.run_coroutine_threadsafe(
+                    ctx.send(embed=song_embed), self.bot.loop
+                )
             else:
                 asyncio.run_coroutine_threadsafe(
                     voice.disconnect(), self.bot.loop
