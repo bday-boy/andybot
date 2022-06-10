@@ -3,9 +3,8 @@ import os
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import Context
 
-from andybot.utils.file import load_config
+from andybot.utils.file import cfg
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -19,7 +18,6 @@ logger.addHandler(handler)
 
 intents = discord.Intents.default()
 intents.messages = True
-cfg = load_config()
 bot = commands.Bot(command_prefix=cfg['command_prefix'], intents=intents)
 
 
