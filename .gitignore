@@ -1,6 +1,9 @@
 # Files with confidential data (i.e. Discord API Token)
 config.json
 
+# Folder full of stuff not needed for bot
+dumps/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
