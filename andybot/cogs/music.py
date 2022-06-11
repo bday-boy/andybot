@@ -1,5 +1,5 @@
 import asyncio
-from collections import defaultdict, deque
+from collections import defaultdict
 from typing import Tuple, Union
 
 import discord
@@ -8,7 +8,10 @@ from discord.ext import commands
 
 from andybot.utils.checks import in_voice_call, in_voice_call_check, \
     is_playing_audio, is_playing_audio_check
-from andybot.utils.music import Playlist, Song, YouTubeSong
+from andybot.utils.music import Playlist, YouTubeSong
+from andybot.core import Andybot, handle_base_exceptions
+
+FFMPEG_OPTS = '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
 
 
 class GuildState:
@@ -19,19 +22,9 @@ class GuildState:
 
     def reset(self) -> None:
         self.playlist = Playlist()
-        self.song_history = []
         self.volume = 0.1
         self.voice = None
-        self._now_playing = None
-
-    @property
-    def now_playing(self) -> Song:
-        return self._now_playing
-
-    @now_playing.setter
-    def now_playing(self, song: Song) -> None:
-        self.song_history.append(song)
-        self._now_playing = song
+        self.now_playing = None
 
 
 class Music(commands.Cog):
@@ -56,18 +49,13 @@ class Music(commands.Cog):
     async def on_ready(self):
         print('andybot music player is ready.')
 
-    @commands.command(aliases=['add', 'queue'])
+    @commands.command(aliases=['add', 'p', '+'])
     async def play(self, ctx: commands.Context, *, url: str) -> None:
         """Attempts to play the given URL. Currently does not support any
         other arguments.
         """
         state = self.get_state(ctx)
-
-        try:
-            song = YouTubeSong(url, ctx.author)
-        except yt_dlp.DownloadError as yt_error:
-            await ctx.send(f"Couldn't download the video :pensive: {yt_error}")
-            raise yt_error
+        song = YouTubeSong(url, ctx.author)
 
         if not in_voice_call(ctx):
             channel = ctx.author.voice.channel
@@ -79,6 +67,13 @@ class Music(commands.Cog):
 
         if not is_playing_audio(ctx):
             self._play(ctx)
+
+    @play.error
+    async def play_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, yt_dlp.DownloadError):
+            await ctx.send(f"Couldn't download the video :pensive:")
+        else:
+            await handle_base_exceptions(ctx, error)
 
     @commands.check(in_voice_call_check)
     @commands.check(is_playing_audio_check)
@@ -98,9 +93,20 @@ class Music(commands.Cog):
         """Skips ahead by a certain number of songs."""
         voice, state = self.get_voice_info(ctx)
         if voice and voice.channel:
-            await voice.stop()
-            skipped_songs = state.playlist.skip(num_songs)
-            state.playlist.extend(skipped_songs)
+            voice.stop()
+            state.playlist.skip(num_songs - 1)
+        else:
+            raise commands.CommandError('Bot is not in a voice channel.')
+
+    @commands.check(in_voice_call_check)
+    @commands.check(is_playing_audio_check)
+    @commands.command(aliases=['skipto', '?', 'find', 'goto'])
+    async def search(self, ctx: commands.Context, *, song_search: str) -> None:
+        """Skips ahead by a certain number of songs."""
+        voice, state = self.get_voice_info(ctx)
+        if voice and voice.channel:
+            voice.stop()
+            state.playlist.skip_to(song_search)
         else:
             raise commands.CommandError('Bot is not in a voice channel.')
 
@@ -119,13 +125,37 @@ class Music(commands.Cog):
         state = self.get_state(ctx)
 
         if not 0 <= vol <= 200:
-            ctx.send('Volume must be between 0 and 200.')
+            await ctx.send('Volume must be between 0 and 200.')
             raise commands.CommandError(
                 'Volume can only be between 0 and 200.')
 
         vol /= 100
         state.volume = vol
         ctx.guild.voice_client.source.volume = vol
+
+    @commands.check(in_voice_call_check)
+    @commands.command(aliases=['songs', 'q'])
+    async def queue(self, ctx: commands.Context) -> None:
+        """Lists the current songs in the queue."""
+        state = self.get_state(ctx)
+        embed = discord.Embed(
+            title=f'Now playing: {state.now_playing.title}',
+            description=state.playlist.song_list
+        )
+        Andybot.format_embed(embed)
+        await ctx.send(embed=embed)
+
+    @commands.check(in_voice_call_check)
+    @commands.command(aliases=['h'])
+    async def history(self, ctx: commands.Context) -> None:
+        """Lists the song history."""
+        state = self.get_state(ctx)
+        embed = discord.Embed(
+            title='Song history (most recent listed first)',
+            description=state.playlist.history
+        )
+        Andybot.format_embed(embed)
+        await ctx.send(embed=embed)
 
     def _play(self, ctx: commands.Context) -> None:
         """Handles the actual playing of the song.
@@ -137,7 +167,9 @@ class Music(commands.Cog):
         voice, state = self.get_voice_info(ctx)
         song = state.playlist.get_song()
         source = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(song.stream_url), volume=state.volume
+            discord.FFmpegPCMAudio(
+                song.url, before_options=FFMPEG_OPTS),
+            volume=state.volume
         )
         state.now_playing = song
         asyncio.run_coroutine_threadsafe(
@@ -145,7 +177,9 @@ class Music(commands.Cog):
         )
 
         def after(error: Exception) -> None:
-            if not state.playlist.is_empty():
+            if state.playlist.is_empty():
+                voice.stop()
+            else:
                 self._play(ctx)
 
         voice.play(source, after=after)
