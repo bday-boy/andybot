@@ -22,7 +22,7 @@ bot = commands.Bot(command_prefix=cfg['command_prefix'], intents=intents)
 
 
 @bot.event
-async def on_ready():
+async def on_ready() -> None:
     print(f'Logged in as {bot.user}')
     await bot.change_presence(activity=discord.Game('Glitches in my System'))
 
