@@ -4,6 +4,9 @@ A Discord music bot to use for my friends if a bunch of bots get C&D'd again.
 
 ## Commands
 
+All command aliases are subject to change. And I'm too lazy to frequently
+update this README, so it may not accurately reflect the commands.
+
 ```
 >>[play|add|p|+] <url>
 Attempts to play the given URL. Currently does not support any
