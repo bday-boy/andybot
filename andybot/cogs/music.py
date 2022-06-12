@@ -90,7 +90,9 @@ class Music(commands.Cog):
     @commands.check(is_playing_audio_check)
     @commands.command(aliases=['next', '|'])
     async def skip(self, ctx: commands.Context, *, num_songs: int = 1) -> None:
-        """Skips ahead by a certain number of songs."""
+        """Skips ahead by a certain number of songs. Default is the next
+        song.
+        """
         voice, state = self.get_voice_info(ctx)
         if voice and voice.channel:
             voice.stop()
@@ -102,7 +104,8 @@ class Music(commands.Cog):
     @commands.check(is_playing_audio_check)
     @commands.command(aliases=['skipto', '?', 'goto'])
     async def search(self, ctx: commands.Context, *, song_search: str) -> None:
-        """Skips ahead by a certain number of songs."""
+        """Skips ahead to a song by name. Immediately skips to best match."""
+        # TODO: Add confirmation
         voice, state = self.get_voice_info(ctx)
         if voice and voice.channel:
             voice.stop()
@@ -113,7 +116,7 @@ class Music(commands.Cog):
     @commands.check(in_voice_call_check)
     @commands.command(aliases=['leave', 'die', 'begone', 'farethewell'])
     async def stop(self, ctx: commands.Context) -> None:
-        """Attempts to play the given URL."""
+        """Stops the music and disconnects the bot from the voice call."""
         voice, state = self.get_voice_info(ctx)
         await voice.disconnect()
         state.reset()
@@ -148,7 +151,7 @@ class Music(commands.Cog):
     @commands.check(in_voice_call_check)
     @commands.command(aliases=['h'])
     async def history(self, ctx: commands.Context) -> None:
-        """Lists the song history."""
+        """Lists the song history. Most recent songs are at the top."""
         state = self.get_state(ctx)
         embed = discord.Embed(
             title='Song history (most recent listed first)',
