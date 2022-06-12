@@ -4,6 +4,13 @@ This file contains several useful functions for fuzzy string search.
 
 
 def levenshtein_osa(a: str, b: str) -> int:
+    """A slightly-modified version of the traditional Levenshtein string
+    distance algorithm that counts an adjacent character swap as one operation.
+
+    For example, traditional Levenshtein would see ab and ba and need to do a
+    deletion and then insertion (ab -> a -> ba) whereas this version can
+    just swap them in one go.
+    """
     a_len = len(a)
     b_len = len(b)
     D = [[0] * (b_len + 1) for i in range(a_len + 1)]
@@ -29,7 +36,10 @@ def levenshtein_osa(a: str, b: str) -> int:
 
 
 def lcs(search: str, text: str) -> int:
-    """Finds the longest common subsequence between two strings."""
+    """Finds the length of the longest common subsequence between two strings.
+    A small amount of extra work can be done to recover the subsequence as well,
+    but that isn't necessary for this project.
+    """
     search_len = len(search)
     text_len = len(text)
     L = [[0] * (text_len + 1) for _ in range(search_len + 1)]
