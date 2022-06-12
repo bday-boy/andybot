@@ -100,7 +100,7 @@ class Music(commands.Cog):
 
     @commands.check(in_voice_call_check)
     @commands.check(is_playing_audio_check)
-    @commands.command(aliases=['skipto', '?', 'find', 'goto'])
+    @commands.command(aliases=['skipto', '?', 'goto'])
     async def search(self, ctx: commands.Context, *, song_search: str) -> None:
         """Skips ahead by a certain number of songs."""
         voice, state = self.get_voice_info(ctx)
