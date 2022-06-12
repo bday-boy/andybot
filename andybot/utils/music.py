@@ -1,5 +1,7 @@
+import pytz
 import random
 from collections import deque
+from datetime import datetime
 from typing import Any, Iterable, List, Union
 
 import discord
@@ -70,20 +72,16 @@ class YouTubeSong(Song):
         """Creates an embed with information about the song and the next
         song in the queue.
         """
-        description = self.description[:256].split('\n')
-        if len(description) > 5 or len(self.description) > 256:
-            description = "\n".join(description[:5]) + '...'
-        else:
-            description = "\n".join(description[:5])
-
+        now = datetime.now(pytz.utc)
         # Add requested by and timestamp
         embed = discord.Embed(
-            description=description,
             title=self.title,
             url=self.url,
+            timestamp=now
         ).set_author(
-            name=self.requester
-        ).set_thumbnail(
+            name=self.requester,
+            icon_url=self.requester.avatar_url
+        ).set_image(
             url=self.thumbnail
         ).set_footer(
             text=f'Next song: {next_song.title if next_song else "none"}'
