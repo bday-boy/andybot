@@ -13,7 +13,7 @@ def get_file_content(file_path: str, throw_error: bool = True,
     """
     if not osp.isfile(file_path):
         if throw_error:
-            raise FileNotFoundError()
+            raise FileNotFoundError(f"Couldn't find {file_path}")
         else:
             return default
     file_content = default
