@@ -32,3 +32,17 @@ Lists the current songs in the queue.
 >>[history|h] 
 Lists the song history.
 ```
+
+## Dev stuff
+
+### Dependencies
+
+All Python dependencies are listed in requirements.txt, but there are some
+external dependencies for the bot to run:
+
+- ffmpeg
+- opus-tools
+- yt-dlp
+
+It's probably a huge pain in the ass to install yt-dlp on Windows, but I know
+they're all very easy to install on Linux with any package manager.
