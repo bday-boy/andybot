@@ -9,8 +9,7 @@ update this README, so it may not accurately reflect the commands.
 
 ```
 >>[play|add|p|+] <url>
-Attempts to play the given URL. Currently does not support any
-other arguments.
+Attempts to play the given URL. Currently does not support any other arguments.
 
 >>[toggle|pause|resume] 
 Pauses or resumes the current song.
