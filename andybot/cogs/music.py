@@ -167,8 +167,7 @@ class Music(commands.Cog):
         voice, state = self.get_voice_info(ctx)
         song = state.playlist.get_song()
         source = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(
-                song.url, before_options=FFMPEG_OPTS),
+            discord.FFmpegPCMAudio(song.url, before_options=FFMPEG_OPTS),
             volume=state.volume
         )
         state.now_playing = song
