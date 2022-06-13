@@ -8,6 +8,7 @@ from discord.ext import commands
 
 from andybot.utils.checks import in_voice_call, in_voice_call_check, \
     is_playing_audio, is_playing_audio_check
+from andybot.utils.misc import escape_special_chars
 from andybot.utils.music import Playlist, YouTubeSong
 from andybot.core import Andybot, handle_base_exceptions
 
@@ -63,7 +64,8 @@ class Music(commands.Cog):
             await ctx.guild.change_voice_state(channel=channel, self_deaf=True)
 
         state.playlist.add_song(song)
-        await ctx.send('Added to queue.')
+        escaped_title = escape_special_chars(song.title)
+        await ctx.send(f'Added **{escaped_title}** to queue.')
 
         if not is_playing_audio(ctx):
             self._play(ctx)
