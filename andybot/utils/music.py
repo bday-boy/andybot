@@ -2,13 +2,13 @@ import pytz
 import random
 from collections import deque
 from datetime import datetime
-from typing import Any, Iterable, List, Union
+from typing import Any, Iterable, Union
 
 import discord
 import yt_dlp
 
 from andybot.core import Andybot
-from andybot.utils.fuzzy_string import lcs
+from andybot.utils.fuzzy_string import lcs_length
 
 YT_DLP_OPTS = {
     'default_search': 'ytsearch',
@@ -49,6 +49,8 @@ class YouTubeSong(Song):
     """yt-dlp helper class that downloads video information and stores it
     in class attributes for easy use.
     """
+    # TODO: Implement more robust way of getting stream link so playlists
+    # can be queued
 
     def __init__(self, url: str, requester: discord.User = None) -> None:
         info = None
@@ -60,13 +62,6 @@ class YouTubeSong(Song):
             setattr(self, key, info[key])
         self.requester = requester
         self._all_info = info
-
-    # TODO: Implement more robust way of getting stream link. Mayve set to
-    # info.get('url') in __init__ and have getter/setter that checks if it's
-    # None and downloads if it is
-    # @property
-    # def url(self) -> str:
-    #     pass
 
     def embed(self, next_song: Song) -> discord.Embed:
         """Creates an embed with information about the song and the next
@@ -212,7 +207,7 @@ class Playlist(deque):
         # Finds index of most similar song
         longest_subseq = 0
         for index, song in enumerate(song_list):
-            subseq_len = lcs(song.title.upper(), song_search)
+            subseq_len = lcs_length(song.title.upper(), song_search)
             if subseq_len >= min_len and longest_subseq < subseq_len:
                 longest_subseq = subseq_len
                 best_match_index = index

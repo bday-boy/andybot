@@ -1,8 +1,3 @@
-"""
-This file contains several useful functions for fuzzy string search.
-"""
-
-
 def levenshtein_osa(a: str, b: str) -> int:
     """A slightly-modified version of the traditional Levenshtein string
     distance algorithm that counts an adjacent character swap as one operation.
@@ -35,11 +30,8 @@ def levenshtein_osa(a: str, b: str) -> int:
     return D[-1][-1]
 
 
-def lcs(search: str, text: str) -> int:
-    """Finds the length of the longest common subsequence between two strings.
-    A small amount of extra work can be done to recover the subsequence as well,
-    but that isn't necessary for this project.
-    """
+def lcs_table(search: str, text: str) -> int:
+    """Computes the longest common subsequence table of two strings."""
     search_len = len(search)
     text_len = len(text)
     L = [[0] * (text_len + 1) for _ in range(search_len + 1)]
@@ -51,6 +43,15 @@ def lcs(search: str, text: str) -> int:
             else:
                 L[i][j] = max(L[i - 1][j], L[i][j - 1])
 
+    return L
+
+
+def lcs_length(search: str, text: str) -> int:
+    """Finds the length of the longest common subsequence between two
+    strings.
+    """
+    L = lcs_table(search, text)
+
     return L[-1][-1]
 
 
@@ -61,5 +62,5 @@ if __name__ == '__main__':
     )
     s = 'test'
     t = 'tes'
-    indices = lcs(s, t)
+    indices = lcs_length(s, t)
     print('done')
