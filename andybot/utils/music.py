@@ -33,11 +33,15 @@ QUALITIES = {
 }
 
 
-class NoSongInfoError(Exception):
+class SongError(Exception):
+    """Base error for all song-related problems."""
+
+
+class NoSongInfoError(SongError):
     """Raised when a song is downloaded but doesn't have any information."""
 
 
-class NoSongFoundError(Exception):
+class NoSongFoundError(SongError):
     """Raised when a song queue search fails."""
 
 
