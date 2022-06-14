@@ -5,11 +5,23 @@ from typing import Union
 import requests
 import requests_cache
 
-import andybot.cogs.pokemon.core.vars as pkmn
+requests_cache.install_cache('./data/pokeapi', expire_after=timedelta(days=7))
+def _get_resource(url): return requests.get(url).json()['results']
 
-requests_cache.install_cache(
-    './data/pokeapi', expire_after=timedelta(days=7)
-)
+
+_stats_json = _get_resource('https://pokeapi.co/api/v2/stat')
+_types_json = _get_resource('https://pokeapi.co/api/v2/type')
+_games_json = _get_resource('https://pokeapi.co/api/v2/version-group')
+
+STATS_MAP = {
+    stat['name']: int(index) for index, stat in enumerate(_stats_json)
+    if index <= 5
+}
+TYPES_MAP = {
+    type_['name']: int(index) for index, type_ in enumerate(_types_json)
+    if index <= 17
+}
+GAMES = [game['name'] for game in _games_json]
 
 
 def get_by_url(url: str) -> dict:
@@ -110,7 +122,7 @@ def get_stats(pokemon: str) -> list:
     stats_list = [-1 for i in range(6)]
 
     for stat in mon_dict['stats']:
-        index = pkmn.STATS_MAP[stat['stat']['name']]
+        index = STATS_MAP[stat['stat']['name']]
         stats_list[index] = stat['base_stat']
 
     return stats_list
@@ -124,13 +136,13 @@ def get_type_dmg_to(type_: str) -> list:
     no_dmg = dmg_relations['no_damage_to']
 
     for type_ in double_dmg:
-        index = pkmn.TYPES_MAP[type_['name']]
+        index = TYPES_MAP[type_['name']]
         dmg_to[index] = 2
     for type_ in half_dmg:
-        index = pkmn.TYPES_MAP[type_['name']]
+        index = TYPES_MAP[type_['name']]
         dmg_to[index] = 0.5
     for type_ in no_dmg:
-        index = pkmn.TYPES_MAP[type_['name']]
+        index = TYPES_MAP[type_['name']]
         dmg_to[index] = 0
 
     return dmg_to
@@ -144,13 +156,13 @@ def get_type_dmg_from(type_: str) -> list:
     no_dmg = dmg_relations['no_damage_from']
 
     for type_ in double_dmg:
-        index = pkmn.TYPES_MAP[type_['name']]
+        index = TYPES_MAP[type_['name']]
         dmg_from[index] = 2
     for type_ in half_dmg:
-        index = pkmn.TYPES_MAP[type_['name']]
+        index = TYPES_MAP[type_['name']]
         dmg_from[index] = 0.5
     for type_ in no_dmg:
-        index = pkmn.TYPES_MAP[type_['name']]
+        index = TYPES_MAP[type_['name']]
         dmg_from[index] = 0
 
     return dmg_from
