@@ -85,7 +85,7 @@ class YouTubeSong(Song):
         ).set_footer(
             text=f'Next song: {next_song.title if next_song else "none"}'
         )
-        return Andybot.format_embed(embed)
+        return Andybot.embed(embed)
 
 
 class Playlist(deque):

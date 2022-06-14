@@ -147,7 +147,7 @@ class Music(commands.Cog):
             title=f'Now playing: {state.now_playing.title}',
             description=state.playlist.song_list
         )
-        Andybot.format_embed(embed)
+        Andybot.embed(embed)
         await ctx.send(embed=embed)
 
     @commands.check(in_voice_call_check)
@@ -159,7 +159,7 @@ class Music(commands.Cog):
             title='Song history (most recent listed first)',
             description=state.playlist.history
         )
-        Andybot.format_embed(embed)
+        Andybot.embed(embed)
         await ctx.send(embed=embed)
 
     def _play(self, ctx: commands.Context) -> None:

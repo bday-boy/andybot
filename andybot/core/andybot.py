@@ -14,8 +14,7 @@ class Andybot:
         pass
 
     @staticmethod
-    def format_embed(embed: Optional[discord.Embed] = None,
-                     **kwargs) -> discord.Embed:
+    def embed(embed: Optional[discord.Embed] = None, **kwargs) -> discord.Embed:
         """Changes properties of an embed in-place and returns it to preserve
         the fluid Embed chaining that the original class offers.
         """

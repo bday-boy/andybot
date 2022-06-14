@@ -17,16 +17,17 @@ class Pokemon(commands.Cog):
 
     @commands.command()
     async def test(self, ctx: commands.Context, *, amt: int) -> None:
-        """Gets the weaknesses, resistances, and immunities of a Pokemon."""
-        test_embed = Andybot.format_embed(
+        """All bot tests go here."""
+        test_embed = Andybot.embed(
             description=f'```\n{"-" * int(amt)}```')
         await ctx.send(embed=test_embed)
 
-    @commands.command(aliases=['wri'])
+    @commands.command(aliases=['wri', 'resistances'])
     async def weaknesses(self, ctx: commands.Context, *, pokemon: str) -> None:
         """Gets the weaknesses, resistances, and immunities of a Pokemon."""
-        types_embed = Andybot.format_embed(title=pokemon)
-        type_info = pokeapi.get_pkmn_type_info(pokemon.lower())
+        types_embed = Andybot.embed(title=pokemon)
+        pokemon_match = pokeapi.best_match_pokemon(pokemon)
+        type_info = pokeapi.get_pkmn_type_info(pokemon_match)
         for stat, index in pokeapi.TYPES_MAP.items():
             types_embed.add_field(name=stat, value=f'{type_info[index]:.2f}')
         await ctx.send(embed=types_embed)
@@ -34,8 +35,9 @@ class Pokemon(commands.Cog):
     @commands.command()
     async def stats(self, ctx: commands.Context, *, pokemon: str) -> None:
         """Gets the stats of a Pokemon."""
-        stats = pokeapi.get_stats(pokemon)
-        stats_embed = Andybot.format_embed(title=pokemon)
+        pokemon_match = pokeapi.best_match_pokemon(pokemon)
+        stats = pokeapi.get_stats(pokemon_match)
+        stats_embed = Andybot.embed(title=pokemon)
         for stat, index in pokeapi.STATS_MAP.items():
             stats_embed.add_field(name=stat, value=stats[index])
         await ctx.send(embed=stats_embed)
@@ -43,8 +45,9 @@ class Pokemon(commands.Cog):
     @commands.command()
     async def move(self, ctx: commands.Context, *, move_name: str) -> None:
         """Gets the weaknesses, resistances, and immunities of a Pokemon."""
-        move = pokeapi.get_move_info(move_name.lower())
-        move_embed = Andybot.format_embed(
+        move_match = pokeapi.best_match_move(move_name)
+        move = pokeapi.get_move_info(move_match)
+        move_embed = Andybot.embed(
             title=move_name,
             description=move['description']
         )
@@ -58,7 +61,7 @@ class Pokemon(commands.Cog):
         move_embed.add_field(name='Accuracy', value=move['accuracy'])
         move_embed.add_field(name='PP', value=move['pp'])
         move_embed.add_field(
-            name='Effect chance', value=move['effect_chance'] or '--'
+            name='Effect %', value=move['effect_chance'] or '--'
         )
         move_embed.add_field(name='Priority', value=move['priority'])
         await ctx.send(embed=move_embed)
@@ -68,7 +71,7 @@ class Pokemon(commands.Cog):
                     game: str) -> None:
         """Gets the stats of a Pokemon."""
         mon_moves = pokeapi.get_moves(pokemon, game)
-        moves_embed = Andybot.format_embed(title=pokemon)
+        moves_embed = Andybot.embed(title=pokemon)
         await ctx.send(embed=moves_embed)
 
     def _format_move(self, move: dict) -> str:

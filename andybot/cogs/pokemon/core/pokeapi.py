@@ -8,7 +8,7 @@ import requests_cache
 
 from andybot.core.fuzzy_string import levenshtein_osa
 
-non_alpha = re.compile('[^a-z]+')
+non_alpha = re.compile('[^a-z0-9]+')
 requests_cache.install_cache('./data/pokeapi', expire_after=timedelta(days=7))
 def _get_resource(url): return requests.get(url).json()['results']
 
@@ -38,18 +38,50 @@ TYPES_MAP = {
     if 1 <= get_resource_index(type_['url']) <= 10000
 }
 POKEMON = {pokemon['name'] for pokemon in _pkmn_list}
-GAMES = [game['name'] for game in _game_list]
+GAMES = {game['name'] for game in _game_list}
 MOVES = {move['name'] for move in _move_list}
+MIN_SIMILARITY = 4
 
 
-def get_similar(search: str, iterable: Iterable) -> str:
+def format_game(game: str) -> str:
+    """Takes the word 'Pokemon' out of a game title."""
+    return re.sub(r'\s?(pok[eé]mon|and)\s?', '', game)
+
+
+def format_search(input: str) -> str:
+    alpha_strs = non_alpha.split(input)
+    return '-'.join(alpha_strs).lower(), '-'.join(reversed(alpha_strs)).lower()
+
+
+def best_match(search: str, iterable: Iterable) -> str:
     """Searches an iterable for the most similar string."""
+    if search in iterable:
+        return search
+
     matches = []
-    lower_search = search.lower()
+    search, reversed_search = format_search(search)
+
     for entry in iterable:
-        matches.append((entry, levenshtein_osa(lower_search, entry)))
+        matches.append((entry, levenshtein_osa(search, entry)))
+
+    if search != reversed_search:
+        for entry in iterable:
+            matches.append((entry, levenshtein_osa(reversed_search, entry)))
+
     matches.sort(key=lambda t: t[1])
     return matches[0][0]
+
+
+def best_match_pokemon(pokemon: str) -> str:
+    return best_match(pokemon, POKEMON)
+
+
+def best_match_move(move: str) -> str:
+    return best_match(move, MOVES)
+
+
+def best_match_game(game: str) -> str:
+    return best_match(format_game(game), GAMES)
 
 
 def get_by_url(url: str) -> dict:
@@ -65,11 +97,9 @@ def get_by_url(url: str) -> dict:
 
 def get_by_resource(resource: str, id_or_name: Union[int, str] = '',
                     args: str = '') -> dict:
-    url = '/'.join(
+    return get_by_url('/'.join(
         ['https://pokeapi.co/api/v2', resource, str(id_or_name), args]
-    )
-
-    return get_by_url(url)
+    ))
 
 
 def is_final_evo(mon_name: str, evo_url: str) -> bool:
