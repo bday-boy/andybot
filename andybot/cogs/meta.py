@@ -34,11 +34,11 @@ class Meta(commands.Cog):
         """Sends the temperature of the bot."""
         try:
             celsius, fahrenheit = self._get_temperature()
-            msg = f'I am currently {celsius}°C, or {fahrenheit}°F.'
+            msg = f'I am currently {celsius:.2f}°C, or {fahrenheit:.2f}°F.'
             if 41 <= celsius:
                 msg += (
-                    'At that temperature, proteins denature. If I was a human,'
-                    'I would be dying! :)'
+                    ' At that temperature, proteins denature. If I was a human,'
+                    ' I would be dying! :)'
                 )
             await ctx.send(msg)
         except (AttributeError, KeyError, IndexError):
