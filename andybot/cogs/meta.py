@@ -29,7 +29,7 @@ class Meta(commands.Cog):
             f' {minutes % 60} minutes, and {seconds % 60} seconds.'
         )
 
-    @commands.command(alias=['temp'])
+    @commands.command(aliases=['temp'])
     async def temperature(self, ctx: commands.Context) -> None:
         """Sends the temperature of the bot."""
         try:
