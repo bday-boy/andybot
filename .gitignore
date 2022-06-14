@@ -6,6 +6,7 @@ dumps/
 
 # Large files
 pokeapi.sqlite
+pokemon.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
