@@ -5,7 +5,7 @@ from os import path as osp
 import discord
 from discord.ext import commands
 
-from andybot.utils.file import cfg
+from andybot.core.file import cfg
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)

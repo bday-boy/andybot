@@ -7,8 +7,8 @@ from typing import Any, Iterable, Union
 import discord
 import yt_dlp
 
-from andybot.core import Andybot
-from andybot.utils.fuzzy_string import lcs_length
+from andybot.core.andybot import Andybot
+from andybot.core.fuzzy_string import lcs_length
 
 YT_DLP_OPTS = {
     'default_search': 'ytsearch',

@@ -6,10 +6,10 @@ import discord
 import yt_dlp
 from discord.ext import commands
 
-from andybot.core import Andybot, handle_base_exceptions
-from andybot.utils.checks import in_voice_call, in_voice_call_check, \
+from andybot.core.andybot import Andybot, handle_base_exceptions
+from andybot.core.checks import in_voice_call, in_voice_call_check, \
     is_playing_audio, is_playing_audio_check
-from andybot.utils.misc import escape_special_chars
+from andybot.core.misc import escape_special_chars
 from andybot.cogs.music.utils import Playlist, YouTubeSong
 
 FFMPEG_OPTS = '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'

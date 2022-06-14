@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 
-from andybot.utils.file import cfg
-from andybot.utils.misc import hex_to_rgb
+from andybot.core.file import cfg
+from andybot.core.misc import hex_to_rgb
 
 
 class Andybot:
