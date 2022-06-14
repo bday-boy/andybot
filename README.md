@@ -7,6 +7,8 @@ A Discord music bot to use for my friends if a bunch of bots get C&D'd again.
 All command aliases are subject to change. And I'm too lazy to frequently
 update this README, so it may not accurately reflect the commands.
 
+### Music
+
 ```
 >>[play|add|p|+] <url>
 Attempts to play the given URL. Currently does not support any other arguments.
@@ -31,6 +33,16 @@ Lists the current songs in the queue.
 
 >>[history|h] 
 Lists the song history.
+```
+
+### Meta
+
+```
+>>uptime
+Sends the uptime of the bot in days, hours, minutes, and seconds.
+
+>>[temperature|temp]
+Sends the temperature of the bot.
 ```
 
 ## Dev stuff
