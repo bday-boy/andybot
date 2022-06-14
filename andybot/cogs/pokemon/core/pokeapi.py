@@ -1,27 +1,55 @@
+import re
 from collections import defaultdict
 from datetime import timedelta
-from typing import Union
+from typing import Iterable, Union
 
 import requests
 import requests_cache
 
+from andybot.core.fuzzy_string import levenshtein_osa
+
+non_alpha = re.compile('[^a-z]+')
 requests_cache.install_cache('./data/pokeapi', expire_after=timedelta(days=7))
 def _get_resource(url): return requests.get(url).json()['results']
 
 
-_stats_json = _get_resource('https://pokeapi.co/api/v2/stat')
-_types_json = _get_resource('https://pokeapi.co/api/v2/type')
-_games_json = _get_resource('https://pokeapi.co/api/v2/version-group')
+def get_resource_index(url: str):
+    split_url = url.strip('/').split('/')
+    if len(split_url) < 2:
+        return -1
+    for possible_index in split_url[-2:]:
+        if possible_index.isnumeric():
+            return int(possible_index)
+    return -1
+
+
+_stat_list = _get_resource('https://pokeapi.co/api/v2/stat')
+_type_list = _get_resource('https://pokeapi.co/api/v2/type')
+_pkmn_list = _get_resource('https://pokeapi.co/api/v2/pokemon?limit=10000')
+_game_list = _get_resource('https://pokeapi.co/api/v2/version-group')
+_move_list = _get_resource('https://pokeapi.co/api/v2/move?limit=10000')
 
 STATS_MAP = {
-    stat['name']: int(index) for index, stat in enumerate(_stats_json)
+    stat['name']: int(index) for index, stat in enumerate(_stat_list)
     if index <= 5
 }
 TYPES_MAP = {
-    type_['name']: int(index) for index, type_ in enumerate(_types_json)
-    if index <= 17
+    type_['name']: int(index) for index, type_ in enumerate(_type_list)
+    if 1 <= get_resource_index(type_['url']) <= 10000
 }
-GAMES = [game['name'] for game in _games_json]
+POKEMON = {pokemon['name'] for pokemon in _pkmn_list}
+GAMES = [game['name'] for game in _game_list]
+MOVES = {move['name'] for move in _move_list}
+
+
+def get_similar(search: str, iterable: Iterable) -> str:
+    """Searches an iterable for the most similar string."""
+    matches = []
+    lower_search = search.lower()
+    for entry in iterable:
+        matches.append((entry, levenshtein_osa(lower_search, entry)))
+    matches.sort(key=lambda t: t[1])
+    return matches[0][0]
 
 
 def get_by_url(url: str) -> dict:
@@ -91,7 +119,7 @@ def get_move_info(move: str) -> dict:
         'pp': move_dict['pp'],
         'priority': move_dict['priority'],
         'type': move_dict['type']['name'],
-        'description': move_dict['effect_entries'][-1]['short_effect']
+        'description': move_dict['effect_entries'][-1]['effect']
     }
 
 
@@ -176,13 +204,3 @@ def get_pkmn_type_info(pokemon: str) -> list:
         for i in range(len(dmg_from)):
             dmg_from[i] *= dmg_from_slot_2[i]
     return dmg_from
-
-
-def get_resource_index(url: str):
-    split_url = url.strip('/').split('/')
-    if len(split_url) < 2:
-        return -1
-    for possible_index in split_url[-2:]:
-        if possible_index.isnumeric():
-            return int(possible_index)
-    return -1
