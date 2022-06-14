@@ -4,6 +4,9 @@ config.json
 # Folder full of stuff not needed for bot
 dumps/
 
+# Large files
+pokeapi.sqlite
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
