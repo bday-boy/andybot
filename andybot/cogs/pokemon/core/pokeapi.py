@@ -46,10 +46,10 @@ def is_final_evo(mon_name: str, evo_url: str) -> bool:
     return False
 
 
-def get_moves(mon_name: str, game: str) -> dict:
+def get_moves(pokemon: str, game: str) -> dict:
     mon_moves = defaultdict(list)
     mon_moves['level-up'] = defaultdict(list)
-    mon_dict = get_by_resource('pokemon', mon_name)
+    mon_dict = get_by_resource('pokemon', pokemon)
     moves = mon_dict['moves']
 
     for move_entry in moves:
@@ -73,49 +73,55 @@ def get_move_info(move: str) -> dict:
     return {
         'accuracy': move_dict['accuracy'],
         'damage_class': move_dict['damage_class']['name'],
+        'effect_chance': move_dict['effect_chance'],
         'name': move_dict['name'],
         'power': move_dict['power'],
         'pp': move_dict['pp'],
         'priority': move_dict['priority'],
-        'type': move_dict['type']['name']
+        'type': move_dict['type']['name'],
+        'description': move_dict['effect_entries'][-1]['short_effect']
     }
 
 
-def get_abilities(abilities: dict) -> list:
+def get_abilities(pokemon: str) -> list:
+    mon_dict = get_by_resource('pokemon', pokemon)
     abilities_list = [None, None, None]  # Slot 1, slot 2, hidden ability
 
-    for ability in abilities:
+    for ability in mon_dict['abilities']:
         index = ability['slot']
         abilities_list[index - 1] = ability['ability']['name']
 
     return abilities_list
 
 
-def get_types(types: dict) -> list:
+def get_types(pokemon: str) -> list:
+    mon_dict = get_by_resource('pokemon', pokemon)
     types_list = [None, None]  # Slot 1, slot 2
 
-    for type_ in types:
+    for type_ in mon_dict['types']:
         index = type_['slot']
         types_list[index - 1] = type_['type']['name']
 
     return types_list
 
 
-def get_stats(stats: dict) -> list:
+def get_stats(pokemon: str) -> list:
+    mon_dict = get_by_resource('pokemon', pokemon)
     stats_list = [-1 for i in range(6)]
 
-    for stat in stats:
+    for stat in mon_dict['stats']:
         index = pkmn.STATS_MAP[stat['stat']['name']]
         stats_list[index] = stat['base_stat']
 
     return stats_list
 
 
-def get_type_dmg_to(damage_relations: dict) -> list:
-    dmg_to = [1 for i in range(18)]
-    double_dmg = damage_relations['double_damage_to']
-    half_dmg = damage_relations['half_damage_to']
-    no_dmg = damage_relations['no_damage_to']
+def get_type_dmg_to(type_: str) -> list:
+    dmg_relations = get_by_resource('type', type_)['damage_relations']
+    dmg_to = [1.0 for i in range(18)]
+    double_dmg = dmg_relations['double_damage_to']
+    half_dmg = dmg_relations['half_damage_to']
+    no_dmg = dmg_relations['no_damage_to']
 
     for type_ in double_dmg:
         index = pkmn.TYPES_MAP[type_['name']]
@@ -130,11 +136,12 @@ def get_type_dmg_to(damage_relations: dict) -> list:
     return dmg_to
 
 
-def get_type_dmg_from(damage_relations: dict) -> list:
-    dmg_from = [1 for i in range(18)]
-    double_dmg = damage_relations['double_damage_from']
-    half_dmg = damage_relations['half_damage_from']
-    no_dmg = damage_relations['no_damage_from']
+def get_type_dmg_from(type_: str) -> list:
+    dmg_relations = get_by_resource('type', type_)['damage_relations']
+    dmg_from = [1.0 for i in range(18)]
+    double_dmg = dmg_relations['double_damage_from']
+    half_dmg = dmg_relations['half_damage_from']
+    no_dmg = dmg_relations['no_damage_from']
 
     for type_ in double_dmg:
         index = pkmn.TYPES_MAP[type_['name']]
@@ -149,8 +156,18 @@ def get_type_dmg_from(damage_relations: dict) -> list:
     return dmg_from
 
 
+def get_pkmn_type_info(pokemon: str) -> list:
+    slot_1, slot_2 = get_types(pokemon)
+    dmg_from = get_type_dmg_from(slot_1)
+    if slot_2 is not None:
+        dmg_from_slot_2 = get_type_dmg_from(slot_2)
+        for i in range(len(dmg_from)):
+            dmg_from[i] *= dmg_from_slot_2[i]
+    return dmg_from
+
+
 def get_resource_index(url: str):
-    split_url = url.split('/')
+    split_url = url.strip('/').split('/')
     if len(split_url) < 2:
         return -1
     for possible_index in split_url[-2:]:
