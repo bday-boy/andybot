@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 
 import andybot.cogs.pokemon.core.pokeapi as pokeapi
-import andybot.cogs.pokemon.core.vars as pkmn
 from andybot.core.andybot import Andybot
 
 
@@ -28,7 +27,7 @@ class Pokemon(commands.Cog):
         """Gets the weaknesses, resistances, and immunities of a Pokemon."""
         types_embed = Andybot.format_embed(title=pokemon)
         type_info = pokeapi.get_pkmn_type_info(pokemon.lower())
-        for stat, index in pkmn.TYPES_MAP.items():
+        for stat, index in pokeapi.TYPES_MAP.items():
             types_embed.add_field(name=stat, value=f'{type_info[index]:.2f}')
         await ctx.send(embed=types_embed)
 
@@ -37,15 +36,18 @@ class Pokemon(commands.Cog):
         """Gets the stats of a Pokemon."""
         stats = pokeapi.get_stats(pokemon)
         stats_embed = Andybot.format_embed(title=pokemon)
-        for stat, index in pkmn.STATS_MAP.items():
+        for stat, index in pokeapi.STATS_MAP.items():
             stats_embed.add_field(name=stat, value=stats[index])
         await ctx.send(embed=stats_embed)
 
     @commands.command()
     async def move(self, ctx: commands.Context, *, move_name: str) -> None:
         """Gets the weaknesses, resistances, and immunities of a Pokemon."""
-        move_embed = Andybot.format_embed(title=move_name)
         move = pokeapi.get_move_info(move_name.lower())
+        move_embed = Andybot.format_embed(
+            title=move_name,
+            description=move['description']
+        )
         move_embed.add_field(
             name='Type', value=move['type'].capitalize()
         )
@@ -58,7 +60,7 @@ class Pokemon(commands.Cog):
         move_embed.add_field(
             name='Effect chance', value=move['effect_chance'] or '--'
         )
-        move_embed.add_field(name='Description', value=move['description'])
+        move_embed.add_field(name='Priority', value=move['priority'])
         await ctx.send(embed=move_embed)
 
     @commands.command()
