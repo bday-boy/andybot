@@ -37,8 +37,8 @@ class Meta(commands.Cog):
             msg = f'I am currently {celsius:.2f}°C, or {fahrenheit:.2f}°F.'
             if 41 <= celsius:
                 msg += (
-                    ' At that temperature, proteins denature. If I was a human,'
-                    ' I would be dying! :)'
+                    ' At that temperature, proteins denature.'
+                    ' If I was a human, I would be dying! :)'
                 )
             await ctx.send(msg)
         except (AttributeError, KeyError, IndexError):
@@ -48,8 +48,8 @@ class Meta(commands.Cog):
         """Gets the uptime of the bot in days, hours, minutes, and seconds."""
         seconds = math.floor(time.time() - self.process.create_time())
         minutes = seconds // 60
-        hours = seconds // 60
-        days = seconds // 24
+        hours = minutes // 60
+        days = hours // 24
         return seconds, minutes, hours, days
 
     def _get_temperature(self) -> Tuple[int, int]:
