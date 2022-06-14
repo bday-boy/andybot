@@ -1,5 +1,6 @@
 import logging
 import os
+from os import path as osp
 
 import discord
 from discord.ext import commands
@@ -28,9 +29,10 @@ async def on_ready() -> None:
 
 
 # Loads all cogs. Each cog must have a module-level setup function defined.
-for file_name in os.listdir('./andybot/cogs'):
-    if file_name.endswith('.py') and not file_name.startswith('__'):
-        bot.load_extension(f'andybot.cogs.{file_name[:-3]}')
+cogs_dir = './andybot/cogs'
+for file_name in os.listdir(cogs_dir):
+    if osp.isdir(osp.join(cogs_dir, file_name)) and not file_name.startswith('__'):
+        bot.load_extension(f'andybot.cogs.{file_name}.{file_name}')
 
 
 bot.run(cfg['token'])

@@ -6,7 +6,10 @@ import psutil
 import discord
 from discord.ext import commands
 
-from andybot.utils.math import celsius_to_fahreinheit
+
+def celsius_to_fahreinheit(celsius: int) -> int:
+    """Converts a temperature from Celsius to Fahrenheit."""
+    return (celsius * (9 / 5)) + 32
 
 
 class Meta(commands.Cog):
