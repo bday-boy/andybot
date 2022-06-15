@@ -67,9 +67,9 @@ class Pokemon(commands.Cog):
         await ctx.send(embed=move_embed)
 
     @commands.command()
-    async def moves(self, ctx: commands.Context, *, pokemon: str,
+    async def moves(self, ctx: commands.Context, pokemon: str,
                     game: str) -> None:
-        """Gets the stats of a Pokemon."""
+        """Gets the stats of a Pokemon. Quote phrases with spaces."""
         mon_moves = pokeapi.get_moves(pokemon, game)
         moves_embed = Andybot.embed(title=pokemon)
         await ctx.send(embed=moves_embed)
