@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 from datetime import timedelta
-from typing import Iterable, Union
+from typing import Tuple, Union
 
 import requests
 import requests_cache
@@ -9,8 +9,27 @@ import requests_cache
 from andybot.core.fuzzy_string import levenshtein_osa
 
 non_alpha = re.compile('[^a-z0-9]+')
+ignored_title_words = re.compile(r'\s?(pok[eé]mon|and)\s?', re.IGNORECASE)
 requests_cache.install_cache('./data/pokeapi', expire_after=timedelta(days=7))
 def _get_resource(url): return requests.get(url).json()['results']
+
+
+def get_by_url(url: str) -> dict:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f'Could not get resource from url {url}. {e}')
+        raise e
+
+    return response.json()
+
+
+def get_by_resource(resource: str, id_or_name: Union[int, str] = '',
+                    args: str = '') -> dict:
+    return get_by_url('/'.join(
+        ['https://pokeapi.co/api/v2', resource, str(id_or_name), args]
+    ))
 
 
 def get_resource_index(url: str):
@@ -44,28 +63,28 @@ MIN_SIMILARITY = 4
 
 
 def format_game(game: str) -> str:
-    """Takes the word 'Pokemon' out of a game title."""
-    return re.sub(r'\s?(pok[eé]mon|and)\s?', '', game)
+    """Takes the words 'Pokemon' and 'and' out of a game title."""
+    return re.sub(ignored_title_words, '-', game).strip('-')
 
 
-def format_search(input: str) -> str:
+def format_search(input: str) -> Tuple[str, str]:
     alpha_strs = non_alpha.split(input)
     return '-'.join(alpha_strs).lower(), '-'.join(reversed(alpha_strs)).lower()
 
 
-def best_match(search: str, iterable: Iterable) -> str:
+def best_match(search: str, search_set: set) -> str:
     """Searches an iterable for the most similar string."""
-    if search in iterable:
+    if search in search_set:
         return search
 
     matches = []
     search, reversed_search = format_search(search)
 
-    for entry in iterable:
+    for entry in search_set:
         matches.append((entry, levenshtein_osa(search, entry)))
 
     if search != reversed_search:
-        for entry in iterable:
+        for entry in search_set:
             matches.append((entry, levenshtein_osa(reversed_search, entry)))
 
     matches.sort(key=lambda t: t[1])
@@ -84,27 +103,9 @@ def best_match_game(game: str) -> str:
     return best_match(format_game(game), GAMES)
 
 
-def get_by_url(url: str) -> dict:
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f'Could not get resource from url {url}. {e}')
-        raise e
-
-    return response.json()
-
-
-def get_by_resource(resource: str, id_or_name: Union[int, str] = '',
-                    args: str = '') -> dict:
-    return get_by_url('/'.join(
-        ['https://pokeapi.co/api/v2', resource, str(id_or_name), args]
-    ))
-
-
 def is_final_evo(mon_name: str, evo_url: str) -> bool:
-    cur_evo = get_by_url(evo_url)['chain']
-    all_evos = [cur_evo]
+    cur_evo = get_by_url(evo_url)
+    all_evos = [cur_evo['chain']]
 
     while all_evos:
         cur_evo = all_evos.pop()
