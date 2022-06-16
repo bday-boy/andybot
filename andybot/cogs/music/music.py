@@ -15,7 +15,7 @@ from andybot.cogs.music.utils import Playlist, YouTubeSong
 FFMPEG_OPTS = '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
 
 
-class GuildState:
+class GuildMusicState:
     """Helper class to track a single guild's state."""
 
     def __init__(self) -> None:
@@ -33,9 +33,9 @@ class Music(commands.Cog):
 
     def __init__(self, bot: discord.Client) -> None:
         self.bot = bot
-        self.states = defaultdict(GuildState)
+        self.states = defaultdict(GuildMusicState)
 
-    def get_state(self, ctx: commands.Context) -> GuildState:
+    def get_state(self, ctx: commands.Context) -> GuildMusicState:
         """Gets the state for a given guild."""
         return self.states[ctx.guild.id]
 
@@ -43,7 +43,7 @@ class Music(commands.Cog):
         return ctx.guild.voice_client
 
     def get_voice_info(self, ctx: commands.Context
-                       ) -> Tuple[discord.VoiceClient, GuildState]:
+                       ) -> Tuple[discord.VoiceClient, GuildMusicState]:
         return self.get_voice_client(ctx), self.get_state(ctx)
 
     @commands.Cog.listener()
