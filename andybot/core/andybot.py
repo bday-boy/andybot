@@ -24,6 +24,19 @@ class Andybot:
         return embed
 
 
+class AndybotHelp(commands.MinimalHelpCommand):
+    def __init__(self, **options):
+        super().__init__(**options)
+        self.verify_checks = False
+
+    async def send_pages(self):
+        destination = self.get_destination()
+        help_embed = Andybot.embed(description='')
+        for page in self.paginator.pages:
+            help_embed.description += page
+        await destination.send(embed=help_embed)
+
+
 async def handle_base_exceptions(ctx: commands.Context,
                                  error: Exception) -> bool:
     if isinstance(error, discord.HTTPException):

@@ -5,6 +5,7 @@ from os import path as osp
 import discord
 from discord.ext import commands
 
+from andybot.core.andybot import AndybotHelp
 from andybot.core.file import cfg
 
 logger = logging.getLogger('discord')
@@ -20,6 +21,7 @@ logger.addHandler(handler)
 intents = discord.Intents.default()
 intents.messages = True
 bot = commands.Bot(command_prefix=cfg['command_prefix'], intents=intents)
+bot.help_command = AndybotHelp()
 
 
 @bot.event
