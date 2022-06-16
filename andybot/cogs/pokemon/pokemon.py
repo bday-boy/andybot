@@ -15,13 +15,6 @@ class Pokemon(commands.Cog):
     async def on_ready(self):
         print('andybot pokemon helper is ready.')
 
-    @commands.command()
-    async def test(self, ctx: commands.Context, *, amt: int) -> None:
-        """All bot tests go here."""
-        test_embed = Andybot.embed(
-            description=f'```\n{"-" * int(amt)}```')
-        await ctx.send(embed=test_embed)
-
     @commands.command(aliases=['wri', 'resistances'])
     async def weaknesses(self, ctx: commands.Context, *, pokemon: str) -> None:
         """Gets the weaknesses, resistances, and immunities of a Pokemon."""
