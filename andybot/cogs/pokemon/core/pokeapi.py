@@ -59,7 +59,6 @@ TYPES_MAP = {
 POKEMON = {pokemon['name'] for pokemon in _pkmn_list}
 GAMES = {game['name'] for game in _game_list}
 MOVES = {move['name'] for move in _move_list}
-MIN_SIMILARITY = 4
 
 
 def format_game(game: str) -> str:
