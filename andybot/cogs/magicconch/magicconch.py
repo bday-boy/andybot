@@ -22,12 +22,12 @@ class MagicConch(commands.Cog):
         """Ask the magic conch for guidance."""
         if random.random() < 0.95:
             await ctx.send(
-                f'The magic conch says: {random.choice(CONCH_MESSAGES)}.'
+                f'The magic conch says: {random.choice(CONCH_MESSAGES)}'
             )
         else:
-            await ctx.send(file=discord.File(
-                r'./attachments/magic_conch_no.mp3'
-            ))
+            await ctx.send(
+                file=discord.File(r'./attachments/magic_conch_no.mp3')
+            )
 
 
 def setup(client: discord.Client) -> None:
