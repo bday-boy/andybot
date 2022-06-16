@@ -4,3 +4,5 @@ pytz
 psutil
 requests
 requests-cache
+numpy
+matplotlib
