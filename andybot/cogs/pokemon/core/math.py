@@ -1,5 +1,10 @@
 from math import floor, ceil
-from typing import List
+from typing import List, Tuple
+
+MIN_IVS = 0
+MAX_IVS = 31
+MIN_EVS = 0
+MAX_EVS = 252
 
 
 def poke_round(num: float) -> float:
@@ -17,8 +22,8 @@ def base_dmg(level: int, power: int, atk: int, def_: int) -> int:
     games apply modifiers before the +2 is added, but the difference is
     negligible enough that it is outside the scope of this bot.
     """
-    level_mod = floor((2 * level / 5) + 2)
-    numerator = floor(level_mod * power * atk / def_)
+    level_modifier = floor((2 * level / 5) + 2)
+    numerator = floor(level_modifier * power * atk / def_)
     return floor(numerator / 50) + 2
 
 
@@ -30,6 +35,18 @@ def calc_dmg(level: int, power: int, atk: int, def_: int, other: int = 1,
     Damage formula details: https://bulbapedia.bulbagarden.net/wiki/Damage
     """
     return floor(base_dmg(level, power, atk, def_) * other * random_num)
+
+
+def highest_dmg(level: int, power: int, atk: int, def_: int, other: int = 1
+                ) -> int:
+    """Calculates the highest damage roll based on the given inputs."""
+    return calc_dmg(level, power, atk, def_, other, 1.0)
+
+
+def lowest_dmg(level: int, power: int, atk: int, def_: int, other: int = 1
+               ) -> int:
+    """Calculates the highest damage roll based on the given inputs."""
+    return calc_dmg(level, power, atk, def_, other, 0.85)
 
 
 def inner_stat_formula(base: int, IV: int, EV: int, level: int) -> int:
@@ -53,7 +70,7 @@ def hp_stat(base: int, IV: int, EV: int, level: int) -> int:
     return inner_stat_formula(base, IV, EV, level) + level + 10
 
 
-def other_stat(base: int, IV: int, EV: int, level: int,
+def non_hp_stat(base: int, IV: int, EV: int, level: int,
                nature: float = 1.0) -> int:
     """Calculates a Pokemon's in-game non-HP stat.
     
@@ -67,23 +84,44 @@ def lowest_hp_stat(base: int, level: int) -> int:
     return hp_stat(base, 0, 0, level)
 
 
-def lowest_other_stat(base: int, level: int, nature: float = 1.0) -> int:
+def lowest_non_hp_stat(base: int, level: int, nature: float = 1.0) -> int:
     """Calculates the lowest non-HP stat value at the given level."""
-    return other_stat(base, 0, 0, level, nature)
+    return non_hp_stat(base, 0, 0, level, nature)
 
 
-def lowest_hp_stat(base: int, level: int) -> int:
+def highest_hp_stat(base: int, level: int) -> int:
     """Calculates the highest HP stat value at the given level."""
     return hp_stat(base, 31, 252, level)
 
 
-def lowest_other_stat(base: int, level: int, nature: float = 1.0) -> int:
-    """Calculates the highest non-HP stat value at the given level."""
-    return other_stat(base, 31, 252, level, nature)
+def highest_non_hp_stat(base: int, level: int, nature: float = 1.0) -> int:
+    """Calculates the highest non-HP stat value at the given level. Nature
+    is neutral by default.
+    """
+    return non_hp_stat(base, 31, 252, level, nature)
 
 
-def all_stats(bases: List[int]) -> List[int]:
-    stats = [hp_stat(bases[0])]
+def lowest_and_highest_hp_stat(base: int, level: int) -> Tuple[int, int]:
+    return lowest_hp_stat(base, level), highest_hp_stat(base, level)
+
+
+def lowest_and_highest_non_hp_stat(base: int, level: int) -> Tuple[int, int]:
+    return lowest_non_hp_stat(base, level), highest_non_hp_stat(base, level)
+
+
+def hp_stat_range(base: int, level: int) -> int:
+    lowest_hp, highest_hp = lowest_and_highest_hp_stat(base, level)
+    return list(range(lowest_hp, highest_hp + 1))
+
+
+def non_hp_stat_range(base: int, level: int, nature: float = 1.0) -> int:
+    lowest_non_hp, highest_non_hp = lowest_and_highest_non_hp_stat(base, level)
+    return list(range(lowest_non_hp, highest_non_hp + 1))
+
+
+def full_stat_ranges(bases: List[int], level: int, nature: float = 1.0
+                     ) -> List[int]:
+    stats = [lowest_and_highest_hp_stat(bases[0], level)]
     for base in bases[1:]:
-        stats.append(other_stat(base))
-    return all_stats
+        stats.append(lowest_and_highest_non_hp_stat(base, level, nature))
+    return stats
