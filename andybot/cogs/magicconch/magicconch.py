@@ -6,7 +6,7 @@ from discord.ext import commands
 
 class MagicConch(commands.Cog):
     """Cog for the magic conch from Spongebob."""
-    prefix = ':shell:'
+    prefix = ':shell: :speech_balloon:'
     wisdom = ('No.', 'No.', 'No.', 'No.', 'No.', "I don't think so.",
               'Maybe someday.', "Why don't you ask me again?", 'Yes.')
 
