@@ -150,34 +150,38 @@ def full_stat_ranges(bases: List[int], level: int, nature: float = 1.0
 ############################### Numpy versions ################################
 ###############################################################################
 
-default_size = 200
 
-
-def random_nature_array(size: int = default_size) -> np.ndarray:
+def random_nature_array(size: int) -> np.ndarray:
+    """Creates an array of random natures modifiers for a single stat."""
+    # Each stat has 4 natures that lower by 0.9x, 17 that are neutral, and
+    # another 4 that raise by 1.1x
     p = np.array((4, 17, 4)) / 25
     natures = np.random.choice((0.9, 1.0, 1.1), size=size, p=p)
     return natures
 
 
-def random_ev_array(size: int = default_size) -> np.ndarray:
+def random_ev_array(size: int) -> np.ndarray:
+    """Creates an array of random EVs."""
     evs = np.random.random_integers(0, 252, size=size)
     return evs
 
 
-def random_iv_array(size: int = default_size) -> np.ndarray:
+def random_iv_array(size: int) -> np.ndarray:
+    """Creates an array of random IVs."""
     ivs = np.random.random_integers(0, 31, size=size)
     return ivs
 
 
-def random_inner_stat_array(base: int, level: int, size: int = default_size 
-                            ) -> np.ndarray:
-    """Creates an array of random stats given a base. Assumes 0 EVs."""
+def random_inner_stat_array(base: int, level: int, size: int) -> np.ndarray:
+    """Computes the inner part of the stat formula with random IVs and 0
+    EVs.
+    """
     random_ivs = random_iv_array(size)
     return np.floor((2 * base + random_ivs) * level / 100)
 
 
-def random_stat_array(base: int, level: int, size: int = default_size
-                      ) -> np.ndarray:
+def random_stat_array(base: int, level: int, size: int) -> np.ndarray:
+    """Creates an array of random values for a given stat. Assumes 0 EVs."""
     natures = random_nature_array(size)
     base_stats = random_inner_stat_array(base, level, size)
     return np.floor((base_stats + 5) * natures)

@@ -11,7 +11,8 @@ def damage_scatter(attacker_level: int, defender_level: int, power: int,
     Pokemon.
     """
     fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
-    def_vec = pokemath.random_stat_array(base_def, defender_level)
+    samples = 200
+    def_vec = pokemath.random_stat_array(base_def, defender_level, samples)
     total_mods = (1.5 if stab else 1) * type_ * mods
     dmgs = pokemath.random_dmg_array(attacker_level, power, atk, def_vec,
                                      total_mods)
@@ -19,11 +20,11 @@ def damage_scatter(attacker_level: int, defender_level: int, power: int,
     ax.scatter(def_vec, hp_percent, label='Damages')
     ax.set_xlabel('Defense')
     ax.set_ylabel('Damage (as % of hp)')
-    ax.set_title('Damage calculation')
+    ax.set_title(f'Random damage calculation with {samples} samples')
     ax.legend()
     plt.grid()
     plt.savefig('./attachments/damage_scatter.png')
 
 
 if __name__ == '__main__':
-    damage_scatter(50, 50, 90, 134, 80, True, 1, 1.5, 165)
+    damage_scatter(51, 50, 90, 134, 80, True, 1, 1.5, 165)
