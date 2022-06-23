@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
+from numpy import ndarray
 
+import andybot.cogs.pokemon.core.math as pokemath
 import andybot.cogs.pokemon.core.pokeapi as pokeapi
 from andybot.core.andybot import Andybot
 
@@ -67,7 +69,17 @@ class Pokemon(commands.Cog):
         moves_embed = Andybot.embed(title=pokemon)
         await ctx.send(embed=moves_embed)
 
+    @commands.command(aliases=['dmg'])
+    async def damage(self, ctx: commands.Context, attacker: str,
+                    defender: str, attacker_level: int, defender_level: int,
+                    move: str, attacker_attack: int, extra_mods: float = 1.0
+                    ) -> None:
+        """Creates a scatterplot of potential damage done to a Pokemon."""
+
     def _format_move(self, move: dict) -> str:
+        pass
+
+    def _get_damage(self, attacker: str, defender: str, move: str) -> ndarray:
         pass
 
 
