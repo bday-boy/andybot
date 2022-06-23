@@ -1,6 +1,6 @@
 import random
 from math import floor, ceil
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 
@@ -162,13 +162,13 @@ def random_nature_array(size: int) -> np.ndarray:
 
 def random_ev_array(size: int) -> np.ndarray:
     """Creates an array of random EVs."""
-    evs = np.random.random_integers(0, 252, size=size)
+    evs = np.random.randint(0, (252 // 4) + 1, size=size) * 4
     return evs
 
 
 def random_iv_array(size: int) -> np.ndarray:
     """Creates an array of random IVs."""
-    ivs = np.random.random_integers(0, 31, size=size)
+    ivs = np.random.randint(0, 31 + 1, size=size)
     return ivs
 
 
@@ -178,6 +178,12 @@ def random_inner_stat_array(base: int, level: int, size: int) -> np.ndarray:
     """
     random_ivs = random_iv_array(size)
     return np.floor((2 * base + random_ivs) * level / 100)
+
+
+def random_hp_array(base: int, level: int, size: int) -> np.ndarray:
+    """Creates an array of random values for a given stat. Assumes 0 EVs."""
+    base_stats = random_inner_stat_array(base, level, size)
+    return base_stats + level + 10
 
 
 def random_stat_array(base: int, level: int, size: int) -> np.ndarray:
@@ -212,5 +218,6 @@ def random_dmg_array(level: int, power: int, atk: int, def_array: np.ndarray,
     return np.floor(base * other * random_array)
 
 
-def damage_as_hp_percent(dmg_array: np.ndarray, hp: int) -> np.ndarray:
+def damage_as_hp_percent(dmg_array: np.ndarray,
+                         hp: Union[int, np.ndarray]) -> np.ndarray:
     return 100 * dmg_array / hp
