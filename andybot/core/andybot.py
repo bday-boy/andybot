@@ -8,19 +8,21 @@ from andybot.core.misc import hex_to_rgb
 
 
 class Andybot:
-    color = hex_to_rgb(cfg['color'])
+    rgb_hex = cfg['color']
+    rgb_tuple = hex_to_rgb(cfg['color'])
 
     def __init__(self) -> None:
         pass
 
     @staticmethod
-    def embed(embed: Optional[discord.Embed] = None, **kwargs) -> discord.Embed:
+    def embed(embed: Optional[discord.Embed] = None, **kwargs
+              ) -> discord.Embed:
         """Changes properties of an embed in-place and returns it to preserve
         the fluid Embed chaining that the original class offers.
         """
         if embed is None:
             embed = discord.Embed(**kwargs)
-        embed.color = discord.Color.from_rgb(*Andybot.color)
+        embed.color = discord.Color.from_rgb(*Andybot.rgb_tuple)
         return embed
 
 
