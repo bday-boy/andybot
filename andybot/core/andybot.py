@@ -8,6 +8,10 @@ from andybot.core.misc import hex_to_rgb
 
 
 class Andybot:
+    """Class for keeping certain aspects of the bot consistent, such as
+    embed color.
+    """
+
     rgb_hex = cfg['color']
     rgb_tuple = hex_to_rgb(cfg['color'])
 
@@ -27,6 +31,11 @@ class Andybot:
 
 
 class AndybotHelp(commands.MinimalHelpCommand):
+    """Simple help command. I really only made this to override the original
+    help command because it was failing command checks even when I told it
+    not to do them lmao
+    """
+
     def __init__(self, **options):
         super().__init__(**options)
         self.verify_checks = False
