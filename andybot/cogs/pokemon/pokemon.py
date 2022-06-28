@@ -5,6 +5,7 @@ from numpy import ndarray
 import andybot.cogs.pokemon.core.math as pokemath
 import andybot.cogs.pokemon.core.pokeapi as pokeapi
 from andybot.core.andybot import Andybot
+from andybot.cogs.pokemon.core.plotter import damage_scatter
 
 
 class Pokemon(commands.Cog):
@@ -41,30 +42,35 @@ class Pokemon(commands.Cog):
     async def move(self, ctx: commands.Context, *, move_name: str) -> None:
         """Gets the weaknesses, resistances, and immunities of a Pokemon."""
         move_match = pokeapi.best_match_move(move_name)
+        move_name = pokeapi.reformat_match(move_match)
         move = pokeapi.get_move_info(move_match)
+        filename = f'{move["type"]}-{move["damage_class"]}.png'
+        move_thumbnail = Andybot.file(
+            f'./attachments/pkmn/moves/{filename}',
+            filename=filename
+        )
         move_embed = Andybot.embed(
             title=move_name,
             description=move['description']
-        )
-        move_embed.add_field(
-            name='Type', value=move['type'].capitalize()
-        )
-        move_embed.add_field(
-            name='Category', value=move['damage_class'].capitalize()
-        )
-        move_embed.add_field(name='Power', value=move['power'] or '--')
-        move_embed.add_field(name='Accuracy', value=move['accuracy'])
-        move_embed.add_field(name='PP', value=move['pp'])
-        move_embed.add_field(
+        ).set_thumbnail(
+            url=f'attachment://{filename}'
+        ).add_field(
+            name='Power', value=move['power'] or '--'
+        ).add_field(
+            name='Accuracy', value=move['accuracy']
+        ).add_field(
+            name='PP', value=move['pp']
+        ).add_field(
             name='Effect %', value=move['effect_chance'] or '--'
+        ).add_field(
+            name='Priority', value=move['priority']
         )
-        move_embed.add_field(name='Priority', value=move['priority'])
-        await ctx.send(embed=move_embed)
+        await ctx.send(file=move_thumbnail, embed=move_embed)
 
     @commands.command()
     async def moves(self, ctx: commands.Context, pokemon: str,
                     game: str) -> None:
-        """Gets the stats of a Pokemon. Quote phrases with spaces."""
+        """Gets the moves of a Pokemon."""
         mon_moves = pokeapi.get_moves(pokemon, game)
         moves_embed = Andybot.embed(title=pokemon)
         await ctx.send(embed=moves_embed)
@@ -79,7 +85,9 @@ class Pokemon(commands.Cog):
     def _format_move(self, move: dict) -> str:
         pass
 
-    def _get_damage(self, attacker: str, defender: str, move: str) -> ndarray:
+    def _damage(self, attacker: str, defender: str, attacker_level: int,
+                defender_level: int, move: str, attacker_attack: int,
+                extra_mods: float = 1.0) -> ndarray:
         pass
 
 

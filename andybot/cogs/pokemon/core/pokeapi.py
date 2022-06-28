@@ -60,6 +60,10 @@ def get_resource_index(url: str):
     return -1
 
 
+def reformat_match(match: str) -> str:
+    return ' '.join(s.capitalize() for s in match.split('-'))
+
+
 def format_game(game: str) -> str:
     """Takes the words 'Pokemon' and 'and' out of a game title."""
     return re.sub(ignored_title_words, '-', game).strip('-')
@@ -115,41 +119,10 @@ def is_final_evo(mon_name: str, evo_url: str) -> bool:
     return False
 
 
-def get_moves(pokemon: str, game: str) -> dict:
-    mon_moves = defaultdict(list)
-    mon_moves['level-up'] = defaultdict(list)
-    mon_dict = get_by_resource('pokemon', pokemon)
-    moves = mon_dict['moves']
+def get_pokemon(pokemon: str) -> dict:
+    pokemon_dict = get_by_resource('pokemon', pokemon)
 
-    for move_entry in moves:
-        for version_group_entry in move_entry['version_group_details']:
-            if version_group_entry['version_group']['name'] == game:
-                move = move_entry['move']
-                method = version_group_entry['move_learn_method']['name']
-                level = int(version_group_entry['level_learned_at'])
-                move_info = get_move_info(move['name'])
-                if level > 0:
-                    mon_moves['level-up'][level].append(move_info)
-                else:
-                    mon_moves[method].append(move_info)
-                break
-
-    return mon_moves
-
-
-def get_move_info(move: str) -> dict:
-    move_dict = get_by_resource('move', move)
-    return {
-        'accuracy': move_dict['accuracy'],
-        'damage_class': move_dict['damage_class']['name'],
-        'effect_chance': move_dict['effect_chance'],
-        'name': move_dict['name'],
-        'power': move_dict['power'],
-        'pp': move_dict['pp'],
-        'priority': move_dict['priority'],
-        'type': move_dict['type']['name'],
-        'description': move_dict['effect_entries'][-1]['effect']
-    }
+    return pokemon_dict
 
 
 def get_abilities(pokemon: str) -> list:
@@ -183,6 +156,47 @@ def get_stats(pokemon: str) -> list:
         stats_list[index] = stat['base_stat']
 
     return stats_list
+
+
+def get_moves(pokemon: str, game: str) -> dict:
+    mon_moves = defaultdict(list)
+    mon_moves['level-up'] = defaultdict(list)
+    mon_dict = get_by_resource('pokemon', pokemon)
+    moves = mon_dict['moves']
+
+    for move_entry in moves:
+        for version_group_entry in move_entry['version_group_details']:
+            if version_group_entry['version_group']['name'] == game:
+                move = move_entry['move']
+                method = version_group_entry['move_learn_method']['name']
+                level = int(version_group_entry['level_learned_at'])
+                move_info = get_move_info(move['name'])
+                if level > 0:
+                    mon_moves['level-up'][level].append(move_info)
+                else:
+                    mon_moves[method].append(move_info)
+                break
+
+    return mon_moves
+
+
+def get_move_info(move: str) -> dict:
+    move_dict = get_by_resource('move', move)
+    move_info = {
+        'accuracy': move_dict['accuracy'],
+        'damage_class': move_dict['damage_class']['name'],
+        'effect_chance': move_dict['effect_chance'],
+        'name': move_dict['name'],
+        'power': move_dict['power'],
+        'pp': move_dict['pp'],
+        'priority': move_dict['priority'],
+        'type': move_dict['type']['name']
+    }
+    move_info['description'] = \
+        move_dict['effect_entries'][-1]['effect'].replace(
+            '$effect_chance', str(move_dict['effect_chance'])
+        )
+    return move_info
 
 
 def get_type_dmg_to(type_: str) -> list:
