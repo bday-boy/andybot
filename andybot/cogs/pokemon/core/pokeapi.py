@@ -12,6 +12,8 @@ non_alpha = re.compile('[^a-z0-9]+')
 ignored_title_words = re.compile(r'\s?(pok[eé]mon|and)\s?', re.IGNORECASE)
 requests_cache.install_cache('./data/pokeapi', expire_after=timedelta(days=7))
 def _get_resource(url): return requests.get(url).json()['results']
+
+
 _stat_list = _get_resource('https://pokeapi.co/api/v2/stat')
 _type_list = _get_resource('https://pokeapi.co/api/v2/type')
 _pkmn_list = _get_resource('https://pokeapi.co/api/v2/pokemon?limit=10000')
@@ -31,6 +33,7 @@ GAMES = {game['name'] for game in _game_list}
 MOVES = {move['name'] for move in _move_list}
 
 del _stat_list, _type_list, _pkmn_list, _game_list, _move_list
+
 
 def get_by_url(url: str) -> dict:
     try:
@@ -195,7 +198,7 @@ def get_move_info(move: str) -> dict:
     move_info['description'] = \
         move_dict['effect_entries'][-1]['effect'].replace(
             '$effect_chance', str(move_dict['effect_chance'])
-        )
+    )
     return move_info
 
 
