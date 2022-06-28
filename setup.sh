@@ -31,10 +31,10 @@ for DMG_CLASS in $DMG_CLASSES
 do
 	curl -o "$DMG_CLASS.png" "https://www.serebii.net/pokedex-bw/type/$DMG_CLASS.png"
 done
-DMG_CLASSES="physical special status"
 
 # Rename "other" to "status" to be consistent with PokeAPI
 mv "other.png" "status.png"
+DMG_CLASSES="physical special status"
 
 # Resize all PNGs to be a standard width and height
 SEREBII_PNGS="${TYPES} ${DMG_CLASSES}"
