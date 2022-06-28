@@ -5,7 +5,7 @@ from os import path as osp
 import discord
 from discord.ext import commands
 
-from andybot.core.andybot import AndybotHelp
+from andybot.core.andybot import Andybot, AndybotHelp
 from andybot.core.file import cfg
 
 logger = logging.getLogger('discord')
@@ -28,6 +28,24 @@ bot.help_command = AndybotHelp()
 async def on_ready() -> None:
     print(f'Logged in as {bot.user}')
     await bot.change_presence(activity=discord.Game('Glitches in my System'))
+
+
+@bot.command()
+async def about(ctx: commands.Context) -> None:
+    """Sends a brief description of the bot."""
+    desc = (
+        "I'm Andybot, a general purpose bot made by Birthday Boy. "
+        "Currently, my only capabilites are to be used as a basic music bot "
+        "and to send various information about Pokemon.\n\n"
+        "My code can be found [here](https://github.com/bday-boy/andybot)."
+    )
+    about_embed = Andybot.embed(
+        title='Hello there!',
+        description=desc
+    ).set_thumbnail(
+        url=bot.user.avatar_url
+    )
+    await ctx.send(embed=about_embed)
 
 
 # Loads all cogs. Each cog must have a module-level setup function defined.
