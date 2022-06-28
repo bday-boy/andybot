@@ -1,5 +1,4 @@
-from io import BufferedIOBase
-from typing import Optional, Union
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -15,7 +14,6 @@ class Andybot:
 
     rgb_hex = cfg['color']
     rgb_tuple = hex_to_rgb(cfg['color'])
-    file_cache = {}
 
     def __init__(self) -> None:
         pass
@@ -30,22 +28,6 @@ class Andybot:
             new_embed = discord.Embed(**kwargs)
         new_embed.color = discord.Color.from_rgb(*Andybot.rgb_tuple)
         return new_embed
-
-    @staticmethod
-    def file(fp: str, filename: Optional[str] = None, *, spoiler: bool = False
-             ) -> discord.File:
-        """Creates a new file if it doesn't exist, and uses the cached one
-        if it does. Cache assumes file paths are unique.
-        """
-        if fp in Andybot.file_cache:
-            cached_file = Andybot.file_cache[fp]
-            cached_file.filename = filename
-            cached_file.spoiler = spoiler
-            return cached_file
-        else:
-            new_file = discord.File(fp, filename=filename, spoiler=spoiler)
-            Andybot.file_cache[fp] = new_file
-            return new_file
 
 
 class AndybotHelp(commands.MinimalHelpCommand):

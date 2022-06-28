@@ -45,7 +45,7 @@ class Pokemon(commands.Cog):
         move_name = pokeapi.reformat_match(move_match)
         move = pokeapi.get_move_info(move_match)
         filename = f'{move["type"]}-{move["damage_class"]}.png'
-        move_thumbnail = Andybot.file(
+        move_thumbnail = discord.File(
             f'./attachments/pkmn/moves/{filename}',
             filename=filename
         )
@@ -65,7 +65,7 @@ class Pokemon(commands.Cog):
         ).add_field(
             name='Priority', value=move['priority']
         )
-        await ctx.send(file=move_thumbnail, embed=move_embed)
+        await ctx.send(embed=move_embed, file=move_thumbnail)
 
     @commands.command()
     async def moves(self, ctx: commands.Context, pokemon: str,
@@ -77,9 +77,9 @@ class Pokemon(commands.Cog):
 
     @commands.command(aliases=['dmg'])
     async def damage(self, ctx: commands.Context, attacker: str,
-                    defender: str, attacker_level: int, defender_level: int,
-                    move: str, attacker_attack: int, extra_mods: float = 1.0
-                    ) -> None:
+                     defender: str, attacker_level: int, defender_level: int,
+                     move: str, attacker_attack: int, extra_mods: float = 1.0
+                     ) -> None:
         """Creates a scatterplot of potential damage done to a Pokemon."""
 
     def _format_move(self, move: dict) -> str:
