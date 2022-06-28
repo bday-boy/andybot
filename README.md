@@ -49,6 +49,8 @@ Sends the temperature of the bot.
 
 ### Dependencies
 
+#### Required
+
 All Python dependencies are listed in requirements.txt, but there are some
 external dependencies for the bot to run:
 
@@ -58,3 +60,8 @@ external dependencies for the bot to run:
 
 It's probably a huge pain in the ass to install yt-dlp on Windows, but I know
 they're all very easy to install on Linux with any package manager.
+
+#### Optional
+
+Currently, the script get_serebii_pngs.sh uses ImageMagick to convert and
+resize several images downloaded from Serebii.
