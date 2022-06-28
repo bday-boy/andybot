@@ -32,8 +32,8 @@ class Andybot:
         return new_embed
 
     @staticmethod
-    def file(fp: Union[str, BufferedIOBase], filename: Optional[str] = None,
-             *, spoiler: bool = False) -> discord.File:
+    def file(fp: str, filename: Optional[str] = None, *, spoiler: bool = False
+             ) -> discord.File:
         """Creates a new file if it doesn't exist, and uses the cached one
         if it does. Cache assumes file paths are unique.
         """
