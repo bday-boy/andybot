@@ -9,6 +9,9 @@ cd ./attachments/pkmn
 if [ ! -d "./types" ]; then
 	mkdir types
 fi
+if [ ! -d "./types_dual" ]; then
+	mkdir types_dual
+fi
 if [ ! -d "./damage_classes" ]; then
 	mkdir damage_classes
 fi
@@ -53,6 +56,21 @@ do
 			-background transparent \
 			-alpha on \
 			"./moves/$TYPE-$DMG_CLASS.png"
+	done
+done
+
+# Stack all combinations of types
+for TYPE_1 in $TYPES
+do
+	for TYPE_2 in $TYPES
+	do
+		if [ "$TYPE_1" != "$TYPE_2" ]; then
+			convert -append "$TYPE_1.png" "$TYPE_2.png" \
+				-gravity South \
+				-background transparent \
+				-alpha on \
+				"./types_dual/$TYPE_1-$TYPE_2.png"
+		fi
 	done
 done
 
