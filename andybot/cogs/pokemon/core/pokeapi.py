@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import timedelta
 from typing import Tuple, Union
 
+import aiokemon as ak
 import requests
 import requests_cache
 
@@ -51,16 +52,6 @@ def get_by_resource(resource: str, id_or_name: Union[int, str] = '',
     return get_by_url('/'.join(
         ['https://pokeapi.co/api/v2', resource, str(id_or_name), args]
     ))
-
-
-def get_resource_index(url: str):
-    split_url = url.strip('/').split('/')
-    if len(split_url) < 2:
-        return -1
-    for possible_index in split_url[-2:]:
-        if possible_index.isnumeric():
-            return int(possible_index)
-    return -1
 
 
 def reformat_match(match: str) -> str:
@@ -247,6 +238,43 @@ def get_pkmn_type_info(pokemon: str) -> list:
     dmg_from = get_type_dmg_from(slot_1)
     if slot_2 is not None:
         dmg_from_slot_2 = get_type_dmg_from(slot_2)
+        for i in range(len(dmg_from)):
+            dmg_from[i] *= dmg_from_slot_2[i]
+    return dmg_from
+
+
+async def get_type_dmg_from(type_: ak.APIResource) -> list:
+    """Given a type APIResource instance, gets an array of that type's
+    weaknesses, resistances, and immunities.
+    """
+    dmg_from = [1.0] * 18
+    dmg_relations = type_.damage_relations
+    double_dmg = dmg_relations.double_damage_from
+    half_dmg = dmg_relations.half_damage_from
+    no_dmg = dmg_relations.no_damage_from
+
+    for type_ in double_dmg:
+        index = ak.get_resource_id(type_.url)
+        dmg_from[index - 1] = 2.0
+    for type_ in half_dmg:
+        index = ak.get_resource_id(type_.url)
+        dmg_from[index - 1] = 0.5
+    for type_ in no_dmg:
+        index = ak.get_resource_id(type_.url)
+        dmg_from[index - 1] = 0.0
+
+    return dmg_from
+
+
+async def get_pkmn_type_info(pokemon: ak.Pokemon) -> list:
+    """Given a Pokemon APIResource instance, gets an array of that Pokemon's
+    weaknesses, resistances, and immunities.
+    """
+    slot_1 = await pokemon.types[0].type.as_resource()
+    dmg_from = await get_type_dmg_from(slot_1)
+    if len(pokemon.types) == 2:
+        slot_2 = await pokemon.types[1].type.as_resource()
+        dmg_from_slot_2 = await get_type_dmg_from(slot_2)
         for i in range(len(dmg_from)):
             dmg_from[i] *= dmg_from_slot_2[i]
     return dmg_from
