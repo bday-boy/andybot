@@ -135,7 +135,7 @@ def hp_stat_range(base: int, level: int) -> int:
 
 
 def non_hp_stat_range(base: int, level: int, nature: float = 1.0) -> int:
-    lowest_non_hp, highest_non_hp = non_hp_stat_extrema(base, level)
+    lowest_non_hp, highest_non_hp = non_hp_stat_extrema(base, level, nature)
     return list(range(lowest_non_hp, highest_non_hp + 1))
 
 
