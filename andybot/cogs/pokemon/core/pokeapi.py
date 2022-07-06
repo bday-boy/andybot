@@ -243,7 +243,7 @@ def get_pkmn_type_info(pokemon: str) -> list:
     return dmg_from
 
 
-async def get_type_dmg_from(type_: ak.APIResource) -> list:
+async def get_type_dmg_from(type_: ak.Type) -> list:
     """Given a type APIResource instance, gets an array of that type's
     weaknesses, resistances, and immunities.
     """
@@ -253,14 +253,14 @@ async def get_type_dmg_from(type_: ak.APIResource) -> list:
     half_dmg = dmg_relations.half_damage_from
     no_dmg = dmg_relations.no_damage_from
 
-    for type_ in double_dmg:
-        index = ak.get_resource_id(type_.url)
+    for type_resource in double_dmg:
+        index = ak.get_resource_id(type_resource.url)
         dmg_from[index - 1] = 2.0
-    for type_ in half_dmg:
-        index = ak.get_resource_id(type_.url)
+    for type_resource in half_dmg:
+        index = ak.get_resource_id(type_resource.url)
         dmg_from[index - 1] = 0.5
-    for type_ in no_dmg:
-        index = ak.get_resource_id(type_.url)
+    for type_resource in no_dmg:
+        index = ak.get_resource_id(type_resource.url)
         dmg_from[index - 1] = 0.0
 
     return dmg_from
