@@ -4,4 +4,4 @@
 # solution because it loads all plugins and such as well
 source ~/.zshrc
 
-conda activate andybot && python ./bot.py 1>> ./logs/python.output.log 2>> ./logs/python.errors.log
+conda activate andybot && python ./bot.py 1>> ./logs/python.output.log 2>> ./logs/python.errors.log &
